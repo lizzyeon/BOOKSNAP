@@ -93,16 +93,16 @@
         </div>
 
         <script>
-            /* 가입 버튼 클릭 */
+            /* 로그인 버튼 클릭 */
             $('#login_button').click(function () {
 
-                /* 가입 데이터 */
+                /* 로그인 데이터 */
                 let email = $('#input_email').val();
                 let password = $('#input_password').val();
 
                 /* 서버로 보내기 */
                 $.ajax({                                 // AJAX(비동기)로 브라우저 → Django 서버로 데이터 전달
-                    data: {                              // key : value(위의 console.log에 찍힌 정보들)
+                    data: {
                         email : email,
                         password : password
                     },

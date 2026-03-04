@@ -51,5 +51,22 @@ class UploadFeed(APIView):
 
         # '성공했다'고 브라우저에 알려줌
         return Response(status=200)
-    
+
+
+class MySnap(APIView):
+    def get(self, request):
+
+        email = request.session.get('email')  # 로그인할 때 세션에 저장해둔 이메일 가져옴(지금 로그인한 사람 이메일)
+        user = User.objects.filter(email=email).first()  # 이메일로 user 조회
+
+        if email is None:
+            return render(request, "user/login.html")
+
+        if user is None:
+            return render(request, "user/login.html")
+
+        return render(request, 'content/mysnap.html', context=dict(user=user))
+
+
+
 

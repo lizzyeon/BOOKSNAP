@@ -1,6 +1,6 @@
 {% load static %}
 <!doctype html>
-<html lang="ko">
+<html lang="en">
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
@@ -31,7 +31,7 @@
         }
         .feed_box {
             border: solid 1px gray;
-            background-color: white
+            background-color: white;
         }
 
         .modal_overlay {
@@ -59,8 +59,22 @@
             height: 600px;
             position: relative;
             padding: 10px;
-
         }
+
+        .navbar {
+            position: relative;
+            z-index: 1050;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .dropdown-item .material-symbols-outlined {
+            margin-right: 12px;
+        }
+
 
     </style>
 </head>
@@ -89,6 +103,29 @@
             <span id="nav_bar_add_box" class="material-symbols-outlined">add_box</span>
             <span class="material-symbols-outlined">explore</span>
             <span class="material-symbols-outlined">mood_heart</span>
+
+            <!-- 프로필 & 드롭다운 -->
+            <div class="dropdown">
+
+                <!-- 프로필 -->
+                <a href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="box" style="height: 30px; width: 30px">
+                        <img class="profile" src="{% static 'images/PROFILE.png' %}" style="height:30px; width: 30px">
+                    </div>
+                </a>
+
+                <!-- 드롭다운 -->
+                <ul class="dropdown-menu" style="left: -148px" aria-labelledby="dropdownMenuLink">
+                    <li><a class="dropdown-item" href="#">
+                        <span class="material-symbols-outlined">photo_library</span>
+                        MY SNAP</a></li>
+                    <li><a class="dropdown-item" href="#">BOOKSHELF </a></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" href="/user/logout">
+                        <span class="material-symbols-outlined">Logout</span>
+                        LOGOUT</a></li>
+                </ul>
+            </div>
         </div>
     </div>
     </nav>
@@ -163,10 +200,10 @@
 
                 <!-- 아이디 -->
                 <div style="margin-left: 10px; text-align: left; line-height: 1.3">
-                    <div style="font-weight: bold; font-size: 18px">
+                    <div style="font-weight: bold; font-size: 17px; line-height: 1.5">
                         {{ user.nickname }}
                     </div>
-                    <div style="color: gray; font-size: 16px; line-height: 1.3">
+                    <div style="color: gray; font-size: 13px; line-height: 1.5">
                         {{ user.name }}
                     </div>
                 </div>
@@ -476,7 +513,7 @@
     </script>
 
 
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
