@@ -86,7 +86,7 @@
             <div class="container-fluid" style="justify-content: space-between; flex-wrap: nowrap; width: 1000px">
 
                 <!-- 왼쪽 : 로고 -->
-                <a class="navbar-brand" href="#">
+                <a class="navbar-brand" href="/main">
                     <img src="{% static 'images/BOOKSNAP.png' %}" style="height:40px;">
                 </a>
 
@@ -101,7 +101,7 @@
 
                 <!-- 오른쪽 : 아이콘 그룹 -->
                 <div class="d-flex gap-3 ms-auto">
-                    <span class="material-symbols-outlined">home</span>
+                    <a href="/main" style="color: black"><span class="material-symbols-outlined">home</span></a>
                     <span class="material-symbols-outlined">send</span>
                     <span id="nav_bar_add_box" class="material-symbols-outlined">add_box</span>
                     <span class="material-symbols-outlined">explore</span>
@@ -113,7 +113,7 @@
                         <!-- 프로필 -->
                         <a href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
                             <div class="box" style="height: 30px; width: 30px">
-                                <img class="profile" src="{% static 'images/PROFILE.png' %}" style="height:30px; width: 30px">
+                                <img class="profile" src="{% get_media_prefix %}{{ user.profile_image }}" style="height:30px; width: 30px">
                             </div>
                         </a>
 
@@ -140,7 +140,7 @@
             <div style="padding-top: 70px; padding-left: 60px; padding-right: 40px; padding-bottom: 20px">
                 <!-- 프로필 사진 -->
                 <div class="box" style="height: 150px; width: 150px">
-                    <img class="profile" src="{% static 'images/PROFILE.png' %}" style="height:150px; width: 150px">
+                    <img class="profile" src="{% get_media_prefix %}{{ user.profile_image }}" style="height:150px; width: 150px">
                 </div>
             </div>
 
@@ -150,9 +150,9 @@
 
                 <!-- #1 줄 -->
                 <div style="display: flex; justify-content: center; flex-direction: row">
-                    <div style="font-size: 20px; font-weight: bold">{{ user.nickname }}</div>
-                    <button id="button_profileupload">프로필 사진 편집</button>
-                    <input type="file" id="input_fileupload" style="display: none">
+                    <div style="font-size: 25px; font-weight: bold">{{ user.nickname }}</div>
+                    <button id="button_profileupload" style="margin:0 40px" >프로필 사진 편집</button>
+                    <input type="file" id="input_fileupload" style="display: none" onchange="profile_upload()">
                     <span class="material-symbols-outlined">Settings</span>
                 </div>
 
@@ -180,7 +180,7 @@
                         <span class="material-symbols-outlined" style="margin-right: 5px">photo_camera</span>
                         SNAP YOUR BOOK
                     </div>
-                    <div><span class="material-symbols-outlined">close</span></div>
+                    <div><span class="modal_close material-symbols-outlined">close</span></div>
                 </div>
 
                 <!-- Image Drog & Drop-->
@@ -204,7 +204,7 @@
                         <span class="material-symbols-outlined" style="margin-right: 5px">photo_camera</span>
                         SNAP YOUR BOOK
                     </div>
-                    <div><span class="material-symbols-outlined">close</span></div>
+                    <div><span class="modal_close material-symbols-outlined">close</span></div>
                 </div>
 
                 <!-- 이미지 | 글쓰기 -->
@@ -220,12 +220,12 @@
                         <div style="display: flex; flex-direction: row; align-items: center; margin: 10px">
                             <!-- 프로필 사진 -->
                             <div class="box" style="height: 35px; width: 35px">
-                                <img class="profile" src="{% static 'images/PROFILE.png' %}"
+                                <img class="profile" src="{% get_media_prefix %}{{ user.profile_image }}"
                                      style="height:35px; width: 35px">
                             </div>
                             <!-- 아이디 -->
                             <div style="margin-left: 10px; font-size: 12px">
-                                <b>SANDRA</b>
+                                <b>{{ user.nickname }}</b>
                             </div>
                         </div>
 
@@ -250,6 +250,15 @@
 
         <!-- Modal Action -->
         <script>
+
+        $('.modal_close').click(function () {         // close 버튼 누르면
+            $('#first_modal').css({                   // first_modal 끄기
+                display: 'none'
+            });
+            $('#second_modal').css({                  // second_modal 끄기
+                display: 'none'
+            });
+        })
 
             let files;
 
@@ -334,8 +343,8 @@
                 let file = files[0];                            // files[0] : 드롭했던 이미지 파일
                 let image = files[0].name;                      // files[0].name : 파일 이름
                 let content = $('#input_feed_content').val();   // textarea에 입력한 글 / .val() : input 값 읽기
-                let user_id = "SANDRA";
-                let profile_image = "images/PROFILE.png";
+            let user_id = "{{ user.nickname }}";
+            let profile_image = "{% get_media_prefix %}{{user.profile_image}}";
 
                 /* FormData에 담고 */
                 let fd = new FormData();                        // 서버로 보낼 데이터들(파일+문자열+텍스트)
@@ -372,8 +381,8 @@
             });
 
             function profile_upload(){
-                let file = $('#input_fileupload')[0].file[0];
-                let email = {{ user.email }};
+                let file = $('#input_fileupload')[0].files[0];
+                let email = "{{ user.email }}";
 
                 let fd = new FormData();
                 fd.append('file', file);                        // 위의 내용들을 FormData에 담는다
@@ -382,23 +391,21 @@
                 $.ajax({                                        // AJAX(비동기)로 브라우저 → Django 서버로 데이터 전달
                     data: fd,                                   // 1. FormData에 담긴 파일+글 데이터를
                     method: "POST",                             // 2. 서버로 전달하는데
-                    url: "/content/upload",                     // 3. 이 주소로 요청(urls.py에서 UploadFeed와 연결)
+                    url: "/user/profile/upload",                // 3. 이 주소로 요청(user.urls.py에서 연결)
                     processData: false,
                     contentType: false,
 
-                    success: function (data) {
+                    success: function () {
                         console.log("성공");
                     },
-                    error: function (request, status, error) {
+                    error: function () {
                         console.log("에러");
                     },
                     complete: function () {
                         console.log("완료");
-                        location.replace("/main");              // main 페이지로 이동
+                        location.replace("/content/mysnap");              // mysnap 페이지로 이동
                     }
                 });
-            });
-
             }
 
         </script>

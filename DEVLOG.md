@@ -1,5 +1,48 @@
 # 📒 BOOKSNAP Development Log
 
+## 2026-03-05
+
+### 📂 프로필 드롭다운 메뉴 구현
+<img src="static/d_images/2026-03-05-1.png" width="500"><br>
+- main.html 상단 프로필 아이콘 클릭 시 드롭다운 메뉴 표시(Bootstrap dropdown 컴포넌트 활용)
+- 'MY SNAP → /content/mysnap', 'LOGOUT → /user/logout' 로 이동 (BOOKSHELF 추후 예정)
+- **드롭다운 메뉴 레이어 문제 해결**
+  - 프로필 드롭다운 메뉴가 오른쪽 피드 영역에 가려지는 문제 발생.
+  - 피드 영역이 navbar보다 더 높은 stacking context를 가지고 있었기 때문.(피드의 레이어가 더 위)
+  - .navbar{ position: relative; z-index: 1050 } 로 문제 해결
+
+### 🖼 MY SNAP 페이지 레이아웃 구현
+- /content/mysnap 경로로 이동 시 사용자 프로필 페이지 표시
+- flex 레이아웃을 활용하여 프로필 영역과 텍스트 영역을 좌우 배치
+- 회원가입 시 profile_image 필드를 기본 이미지로 초기화
+
+### 🔄 프로필 이미지 업로드 기능 연동
+<img src="static/d_images/2026-03-05-2.png" width="500"><br>
+- "프로필 사진 편집" 버튼 클릭 시 숨겨진 file input 실행(display: none)
+- 파일 선택 시 onchange 이벤트로 profile_upload() 함수 실행
+- Feed 이미지 업로드와 같은 방법으로 진행
+- 프로필 이미지 교체 시 메인 우측 피드, 네비바, MYSNAP 페이지 등 user.profile_image를 사용하는 모든 영역에 즉시 반영하도록 구현 ⬇️<br><br>
+<img src="static/d_images/2026-03-05-3.png" width="500">
+<img src="static/d_images/2026-03-05-4.png" width="500"><br>
+
+### 👥 사용자별 게시물 프로필 유지
+- 다른 사용자 계정으로 로그인할 경우, 해당 사용자가 작성한 feed에는 작성자의 프로필 이미지가 유지된 상태로 표시
+- feed 데이터와 user 데이터를 함께 전달하여 템플릿에서 출력({% get_media_prefix %}{{ feed.user.profile_image }})
+
+📌 **배운 점**
+- href의 쓰임
+  - href="#" : 현재 페이지의 맨 위로 이동하는 임시 링크. 아직 연결할 페이지가 없을 때 사용
+  - href="/content/mysnap" : `<a>` 태그에서 사용하여 클릭 시 해당 URL 경로로 이동할 수 있음
+- onchange 이벤트
+  - 입력값이 변경되었을 때 실행되는 이벤트
+  - 동작 흐름 : 파일 선택 → value 변경 → onchange → profile_upload() 실행 → AJAX로 서버 업로드
+- CSS Stacking 문제
+  - 여러 요소가 겹칠 때 더 낮은 레이어가 더 높은 레이어 뒤로 숨는 현상
+  - 각각의 레이어를 z축 위에 있다고 생각해 'z-index'로 우선순위 조정
+<br><br><br><br>
+
+---
+
 ## 2026-03-03
 
 <div style="display: flex; justify-content: center; gap: 20px;">

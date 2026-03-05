@@ -22,7 +22,7 @@ class Join(APIView):
                             password=make_password(password),
                             name=name,
                             nickname=nickname,
-                            profile_image="default_profile.jpg")
+                            profile_image="DEFAULT_IMAGE.png")
 
         return Response(status=200)
 
@@ -70,7 +70,7 @@ class UploadProfile(APIView):
 
         profile_image = uuid_name                           # 파일 이름을을 'profile_image' 필드에 저장
 
-        user = User.objects.get(email=email).first()        # 해당 이메일 주소를 찾아서
+        user = User.objects.filter(email=email).first()        # 해당 이메일 주소를 찾아서
         user.profile_image = profile_image                  # 해당 사용자의 프로필 이미지에 '그' 파일을
         user.save()                                         # DB에 저장
 

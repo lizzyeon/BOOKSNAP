@@ -85,7 +85,7 @@
     <div class="container-fluid" style="justify-content: space-between; flex-wrap: nowrap; width: 1000px">
 
         <!-- 왼쪽 : 로고 -->
-        <a class="navbar-brand" href="#">
+        <a class="navbar-brand" href="/main">
             <img src="{% static 'images/BOOKSNAP.png' %}" style="height:40px;">
         </a>
 
@@ -98,7 +98,7 @@
 
         <!-- 오른쪽 : 아이콘 그룹 -->
         <div class="d-flex gap-3 ms-auto">
-            <span class="material-symbols-outlined">home</span>
+            <a href="/main" style="color: black"><span class="material-symbols-outlined">home</span></a>
             <span class="material-symbols-outlined">send</span>
             <span id="nav_bar_add_box" class="material-symbols-outlined">add_box</span>
             <span class="material-symbols-outlined">explore</span>
@@ -110,16 +110,16 @@
                 <!-- 프로필 -->
                 <a href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
                     <div class="box" style="height: 30px; width: 30px">
-                        <img class="profile" src="{% static 'images/PROFILE.png' %}" style="height:30px; width: 30px">
+                        <img class="profile" src="{% get_media_prefix %}{{ user.profile_image }}" style="height:30px; width: 30px">
                     </div>
                 </a>
 
                 <!-- 드롭다운 -->
                 <ul class="dropdown-menu" style="left: -148px" aria-labelledby="dropdownMenuLink">
-                    <li><a class="dropdown-item" href="#">
+                    <li><a class="dropdown-item" href="/content/mysnap">
                         <span class="material-symbols-outlined">photo_library</span>
                         MY SNAP</a></li>
-                    <li><a class="dropdown-item" href="#">BOOKSHELF </a></li>
+                    <li><a class="dropdown-item" href="/content/bookshelf">BOOKSHELF </a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" href="/user/logout">
                         <span class="material-symbols-outlined">Logout</span>
@@ -141,7 +141,7 @@
                 <div style="display: flex; flex-direction: row; align-items: center; margin: 10px">
                     <!-- 프로필 사진 -->
                     <div class="box" style="height: 60px; width: 60px">
-                        <img class="profile" src="{% static feed.profile_image %}" style="height:60px; width: 60px">
+                        <img class="profile" src="{{ feed.profile_image }}" style="height:60px; width: 60px">
                     </div>
                     <!-- 아이디 -->
                     <div style="margin-left: 10px">
@@ -195,7 +195,7 @@
 
                 <!-- 프로필 사진 -->
                 <div class="box" style="height: 60px; width: 60px">
-                    <img class="profile" src="{% static 'images/PROFILE.png' %}" style="height:60px; width: 60px">
+                    <img class="profile" src="{% get_media_prefix %}{{ user.profile_image }}" style="height:60px; width: 60px">
                 </div>
 
                 <!-- 아이디 -->
@@ -326,7 +326,7 @@
                     <span class="material-symbols-outlined" style="margin-right: 5px">photo_camera</span>
                     SNAP YOUR BOOK
                 </div>
-                <div><span class="material-symbols-outlined">close</span></div>
+                <div><span class="modal_close material-symbols-outlined">close</span></div>
             </div>
 
             <!-- Image Drog & Drop-->
@@ -349,7 +349,7 @@
                     <span class="material-symbols-outlined" style="margin-right: 5px">photo_camera</span>
                     SNAP YOUR BOOK
                 </div>
-                <div><span class="material-symbols-outlined">close</span></div>
+                <div><span class="modal_close material-symbols-outlined">close</span></div>
             </div>
 
             <!-- 이미지 | 글쓰기 -->
@@ -365,12 +365,12 @@
                     <div style="display: flex; flex-direction: row; align-items: center; margin: 10px">
                         <!-- 프로필 사진 -->
                         <div class="box" style="height: 35px; width: 35px">
-                            <img class="profile" src="{% static 'images/PROFILE.png' %}"
+                            <img class="profile" src="{% get_media_prefix %}{{ user.profile_image }}"
                                  style="height:35px; width: 35px">
                         </div>
                         <!-- 아이디 -->
                         <div style="margin-left: 10px; font-size: 12px">
-                            <b>SANDRA</b>
+                            <b>{{ user.nickname }}</b>
                         </div>
                     </div>
 
@@ -394,6 +394,15 @@
 
     <!-- Modal Action -->
     <script>
+
+        $('.modal_close').click(function () {         // close 버튼 누르면
+            $('#first_modal').css({                   // first_modal 끄기
+                display: 'none'
+            });
+            $('#second_modal').css({                  // second_modal 끄기
+                display: 'none'
+            });
+        })
 
         let files;
 
@@ -478,8 +487,8 @@
             let file = files[0];                            // files[0] : 드롭했던 이미지 파일
             let image = files[0].name;                      // files[0].name : 파일 이름
             let content = $('#input_feed_content').val();   // textarea에 입력한 글 / .val() : input 값 읽기
-            let user_id = "SANDRA";
-            let profile_image = "images/PROFILE.png";
+            let user_id = "{{ user.nickname }}";
+            let profile_image = "{% get_media_prefix %}{{user.profile_image}}";
 
             /* FormData에 담고 */
             let fd = new FormData();                        // 서버로 보낼 데이터들(파일+문자열+텍스트)
