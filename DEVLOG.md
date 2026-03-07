@@ -1,5 +1,63 @@
 # 📒 BOOKSNAP Development Log
 
+## 2026-03-06
+
+### 🔄 프로필 이미지 동기화 문제 해결
+<img src="static/d_images/2026-03-06-1.png" width="500"><br>
+<img src="static/d_images/2026-03-06-2.png" width="500"><br>
+- 기존) 사용자가 피드를 업로드하면 작성자의 정보와 함께 프로필 이미지가 표시 됨
+- 문제) 사용자가 프로필을 바꾸면, 전에 업로드했던 피드의 프로필 이미지는 갱신되지 않는 상태로 유지
+- 원인) 해당 프로필 부분에, 피드 작성 시점의 사용자 정보(user_id, profile_image)를 직접 사용 (연동되지 않음)
+- 해결) 피드에 작성자의 email을 저장, email을 기준으로 user 객체를 조회하도록 구현
+  - `class Feed(models.Model):`<br>
+        `email = models.EmailField(default='')`
+  - `for feed in feed_object_list:`<br>
+        `user = User.objects.filter(email=feed.email).first()`
+  - 피드 데이터 구성 시 '`user.profile_image`', '`nickname=user.nickname`' 사용 
+
+
+### 💬 댓글 작성 기능 구현
+<div style="display: flex; justify-content: left; gap: 20px;">
+  <img src="static/d_images/2026-03-06-3.png" width="300"><br>
+  <img src="static/d_images/2026-03-06-4.png" width="300"><br>
+</div>
+
+- 피드 하단에 댓글 입력창을 추가하고 사용자가 댓글을 작성할 수 있도록 구현<br>
+  (feed.id를 이용해서 각 피드의 댓글 입력창을 구분 함)<br>
+  ```<input id="reply_{{ feed.id }}" type="text" placeholder="댓글 달기..."><br>
+  <div class="upload_reply" feed_id="{{ feed.id }}">
+- 댓글 입력 후 send 버튼 클릭 시 AJAX 요청을 통해 서버에 전달
+  ```let feed_id = event.currentTarget.attributes.getNamedItem('feed_id').value;
+  let reply_content = $('#reply_' + feed_id).val();
+
+  $.ajax({
+    data: { feed_id: feed_id, reply_content: reply_content },
+    url: "/content/reply",
+    method: "POST"});
+- 댓글 데이터를 Reply 테이블에 저장
+  ``` Reply.objects.create(
+      feed_id=request.data.get('feed_id'),
+      email=request.session.get('email'),
+      reply_content=request.data.get('reply_content'))
+- 댓글 저장 후 페이지를 새로고침하지 않고 해당 피드의 댓글 목록에 즉시 반영되도록 처리
+  ```success: function () {
+    $('#reply_list_' + feed_id).append(
+        "<div><b>{{ user.nickname }}</b> " + reply_content + "</div>");}
+
+📌 **배운 점**
+- 사용자 식별은 고유값으로 관리하는 것이 중요함
+  - email을 기준으로 user 정보를 조회하도록 구조를 통일하여, profile_image나 user_id 등 사용자 정보 변경 시 자동 일괄 적용할 수 있었음
+  - 또한 Feed에서도 profile_image 등을 직접 저장하지 않고 email을 통해 user 정보를 조회하도록 하여, 사용자 정보 변경 시 자동으로 반영함
+- 댓글 기능 구현 과정에서 AJAX를 활용한 비동기 처리 방식을 이해
+  - 서버에서는 댓글 데이터를 DB에 저장, 클라이언트에서는 .append()를 사용해 DOM에 댓글을 추가하여 새로고침 없이 댓글이 즉시 반영되도록 구현
+- 좋아요 기능은 like_count를 write → update하는 방식과 좋아요 기록을 write → delete하는 방식으로 구현할 수 있음
+  - write → update 방식은 구조가 단순하고 성능이 빠르지만, 좋아요 누른 사람의 목록을 조회할 수 없음(단순히 T ↔ F)
+  - write → delete 방식은 좋아요를 누르면 like_count +1, 좋아요를 취소하면 like_count -1
+  - 추후엔 후자 방법을 써보겠지만, 현재는 전자의 간단한 방식을 사용했음
+<br><br><br><br>
+  - 
+---
+
 ## 2026-03-05
 
 ### 📂 프로필 드롭다운 메뉴 구현
@@ -134,7 +192,7 @@
 ### 🗂 settings.py 및 미디어 경로 설정
 - settings.py에 MEDIA_ROOT, MEDIA_URL 설정 추가
 - MEDIA_ROOT를 기준으로 업로드 이미지가 media 폴더에 저장되도록 저장 경로 구성
-- MEDIA_URL을 활용하여 {% get_media_prefix %}{{ feed.image }} 형태로 이미지 경로를 구성, media 폴더의 파일이 화면에 출력되도록 처리
+- MEDIA_URL을 활용하여 `{% get_media_prefix %}{{ feed.image }}` 형태로 이미지 경로를 구성, media 폴더의 파일이 화면에 출력되도록 처리
 - uuid 기반 파일명을 생성하여 업로드 파일명 중복 방지
 
 📌 **배운 점**
