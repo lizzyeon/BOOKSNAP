@@ -1,5 +1,88 @@
 # 📒 BOOKSNAP Development Log
 
+## 2026-03-11
+<div style="display: flex; justify-content: left; gap: 20px;"><img src="static/d_images/2026-03-11-1.png" width="370">
+  <img src="static/d_images/2026-03-11-2.png" width="370"></div>
+<div style="display: flex; justify-content: left; gap: 20px;"><img src="static/d_images/2026-03-11-1-1.png" width="370">
+  <img src="static/d_images/2026-03-11-2-1.png" width="370"></div>
+<div style="display: flex; justify-content: left; gap: 20px;"><img src="static/d_images/2026-03-11-1-2.png" width="370">
+  <img src="static/d_images/2026-03-11-2-2.png" width="370"></div>
+
+### ❤️ 좋아요 / 🔖 북마크 토글 기능 구현
+- 피드 하단에 좋아요(하트)와 북마크 아이콘을 추가하고 클릭 시 상태가 변경되도록 구현
+1. main.html (프론트 UI - 하트 아이콘)
+```
+<span id="favorite_{{ feed.id }}"
+      feed_id="{{ feed.id }}"
+      class="favorite material-symbols-outlined {% if feed.is_liked %}filled{% endif %}">
+favorite
+</span>
+```
+2. main.html JS (좋아요 클릭 이벤트)<br>
+2-1. 클릭한 게시물 번호 확인
+```
+let favorite_id = event.target.id;
+let feed_id = event.target.attributes.getNamedItem('feed_id')
+```
+2-2. UI 변경 (🖤↔❤️)
+```
+addClass('filled')
+removeClass('filled')
+```
+2-3. AJAX 요청 (서버로 데이터 전송)
+```
+data: { feed_id: feed_id }, method: "POST", url: "/content/like"
+```
+3. urls.py (요청 연결)
+- `/contect/like` 요청이 오면 `ToggleLike` view실행
+```
+    path('like', ToggleLike.as_view())
+```
+4. views.py (서버 로직 실행)
+- AJAX 요청을 처리하는 View
+- 해당 사용자의 좋아요 기록 조회
+```
+class ToggleLike(APIView):
+    def post(self, request):
+        feed_id = request.data.get('feed_id')
+        email = request.session.get('email')
+        like = Like.objects.filter(feed_id=feed_id, email=email).first()
+```
+- 없으면 새로 생성, 있으면 `True ↔ False` 토글
+```
+        if like is None:
+            Like.objects.create(feed_id=feed_id, email=email, is_like=True)
+        else:
+            like.is_like = not like.is_like
+            like.save()
+```
+5. models.py (DB 구조) 
+- class Like(models.Model) 실행 → DB(content_like)에 저장
+- 북마크 기능도 동일한 구조로 구현하여 사용자와 피드 관계 데이터를 기반으로 상태를 관리하도록 구성
+
+6. views.py 실행(Main view)
+```angular2html
+
+```
+7. main.html (템플릿 반영)
+```
+{% if feed.is_liked %}filled{% endif %}
+```
+
+📌 **배운 점**
+
+- HTML 요소에 `feed_id`와 같은 사용자 정의 속성을 추가하면 JS에서 해당 값을 읽어 서버로 전달할 수 있다는 구조를 이해하게 되었음
+- Django 템플릿에서 `{{ feed.id }}`를 HTML 속성에 삽입하면 각 피드에 대한 고유 식별자를 프론트에서 활용할 수 있음
+- 좋아요 기능은 단순히 데이터를 추가하는 방식이 아니라 **기존 데이터를 조회한 뒤 상태를 반전(toggle)**시키는 방식으로 구현할 수 있음을 배움
+- `not like.is_like`를 활용하여 True ↔ False 상태를 전환하도록 구현
+- Django ORM을 활용하면 SQL을 직접 작성하지 않고도 DB 데이터를 조회하고 수정할 수 있다는 점을 이해
+- filter().first()를 사용하면 특정 조건의 데이터를 조회하고, 데이터 존재 여부에 따라 로직을 분기할 수 있음
+- 좋아요나 북마크와 같은 기능은 사용자와 콘텐츠 간의 관계 데이터를 관리하는 방식으로 구현된다는 점을 이해하게 되었음
+- (user + feed) 조합을 기준으로 데이터를 관리하면 상태를 효율적으로 제어할 수 있음
+
+
+---
+
 ## 2026-03-06
 
 ### 🔄 프로필 이미지 동기화 문제 해결
