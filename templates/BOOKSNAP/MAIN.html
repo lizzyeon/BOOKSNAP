@@ -88,10 +88,10 @@
 
         /* 마우스를 올렸을 때(Hover) 'click-fill' 추가해 색 채우기 */
         .material-symbols-outlined.click-fill:hover {
-            font-variation-settings: 'FILL' 1;
+            font-variation-settings: 'FILL' 1 !important;
         }
 
-        . favorite{
+        .favorite{
             color: black;
         }
 
@@ -185,19 +185,18 @@
                         <div>
                             <!-- 좋아요 -->
                             <span id="favorite_{{ feed.id }}" feed_id="{{ feed.id }}"
-                                  class="favorite material-symbols-outlined {% if feed.is_liked %}filled{% endif %}"
+                                  class="favorite material-symbols-outlined click-fill {% if feed.is_liked %}filled{% endif %}"
                                   style="cursor: pointer">
                             favorite
                             </span>
 
                             <!-- 댓글 -->
-                            <span class="material-symbols-outlined">comment</span>
+                            <span class="material-symbols-outlined click-fill">comment</span>
                         </div>
                         <div>
                             <!-- 북마크 -->
-                            <span id="bookmark_{{ feed.id }}" feed_id="{{ feed.id }}"
-                                  class="bookmark material-symbols-outlined {% if feed.is_marked %}filled{% endif %}"
-                                  style="cursor: pointer">
+                            <span id="bookmark_{{ feed.id }}" feed_id="{{ feed.id }}" style="cursor: pointer"
+                                  class="bookmark material-symbols-outlined click-fill {% if feed.is_marked %}filled{% endif %}">
                             bookmark
                             </span>
                         </div>
@@ -228,8 +227,8 @@
                         <div style="display: flex; flex-direction: row; border-top: solid 1px #dbdbdb; align-items: center">
                             <input id="reply_{{ feed.id }}" type="text" class="form-control" style="box-shadow: none;
                                 margin-top: 5px; margin-bottom: 5px; border: none" placeholder="댓글 달기...">
-                            <div class="upload_reply" feed_id="{{ feed.id }}" style="display: flex; justify-content: center;
-                                align-items: center; width: 40px; cursor: pointer">
+                            <div class="upload_reply" feed_id="{{ feed.id }}" style="display: flex;
+                                justify-content: center; align-items: center; width: 40px; cursor: pointer">
                                 <span class="material-symbols-outlined click-fill" style="color: blue">send</span>
                             </div>
                         </div>

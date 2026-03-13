@@ -103,11 +103,11 @@ class MySnap(APIView):
         if user is None:
             return render(request, "user/login.html")
 
-        feed_list = Feed.objects.filter(email=email).all()
+        feed_list = Feed.objects.filter(email=email).all().order_by('-id')
         like_list = list(Like.objects.filter(email=email, is_like=True).values_list('feed_id', flat=True))
-        like_feed_list = Feed.objects.filter(id__in=like_list)
+        like_feed_list = Feed.objects.filter(id__in=like_list).order_by('-id')
         bookmark_list = list(Bookmark.objects.filter(email=email, is_marked=True).values_list('feed_id', flat=True))
-        bookmark_feed_list = Feed.objects.filter(id__in=bookmark_list)
+        bookmark_feed_list = Feed.objects.filter(id__in=bookmark_list).order_by('-id')
 
         return render(request, 'content/mysnap.html', context=dict(feed_list=feed_list,
                                                                                 like_feed_list=like_feed_list,
