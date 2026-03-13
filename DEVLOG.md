@@ -1,5 +1,47 @@
 # 📒 BOOKSNAP Development Log
 
+## 2026-03-12
+
+<div style="display: flex; justify-content: center ; gap: 10px">
+  <img src="static/d_images/2026-03-12-1.png" width="350"><br>
+  <img src="static/d_images/2026-03-12-2.png" width="350"><br>
+  <img src="static/d_images/2026-03-12-3.png" width="350"><br>
+</div>
+
+### 🗂 MySnap 페이지 탭 기능 구현 (Grid / Favorite / Bookmark)
+- 상단 아이콘을 통해 다음 세 가지 게시물 목록을 확인할 수 있도록 구현
+  - Grid : 내가 업로드한 게시물
+  - Favorite : 내가 좋아요한 게시물
+  - Bookmark : 내가 북마크한 게시물
+<br><br>
+- 각 버튼을 클릭하면 해당 게시물 목록만 표시되고 나머지는 숨기도록 구현
+```
+$('#button_feed_list').click(function () {
+  $('#feed_list').css('display', 'flex');
+  $('#like_feed_list, #bookmark_feed_list').hide();
+});
+```
+- 🎨 선택된 탭 아이콘 강조 표시 (filled 처리)
+```
+$('.click-fill').click(function(event){
+  $('.click-fill').removeClass('filled');
+  $(event.currentTarget).addClass('filled');
+});
+```
+
+### 📌 좋아요 / 북마크 게시물 조회 로직 추가 (`views.py`)
+- 로그인한 사용자가 좋아요 또는 북마크한 게시물 목록을 조회하도록 로직 추가
+```
+like_list = Like.objects.filter(email=email, is_like=True)\.values_list('feed_id', flat=True)
+like_feed_list = Feed.objects.filter(id__in=like_list)
+bookmark_list = Bookmark.objects.filter(email=email, is_marked=True)\.values_list('feed_id', flat=True)
+bookmark_feed_list = Feed.objects.filter(id__in=bookmark_list)
+```
+- 게시물이 최신순으로 표시되도록 내림차순 정렬(`.order_by('-id')`)을 적용
+<br><br><br><br>
+
+---
+
 ## 2026-03-11
 <div style="display: flex; justify-content: left; gap: 20px;"><img src="static/d_images/2026-03-11-1.png" width="370">
   <img src="static/d_images/2026-03-11-2.png" width="370"></div>
@@ -165,7 +207,7 @@ is_liked = Like.objects.filter(feed_id=feed.id, email=email, is_like=True).exist
 (`user/views.py → UploadProfile.post()에서 request.FILES['file']로 파일 수신 후 user.profile_image = uuid_name 저장`)
 - 프로필 이미지 교체 시 메인 우측 피드, 네비바, MYSNAP 페이지 등 user.profile_image를 사용하는 모든 영역에 즉시 반영하도록 구현 ⬇️<br><br>
 
-- <img src="static/d_images/2026-03-05-3.png" width="500">
+<img src="static/d_images/2026-03-05-3.png" width="500"><br>
 <img src="static/d_images/2026-03-05-4.png" width="500"><br>
 
 ### 👥 사용자별 게시물 프로필 유지
@@ -188,11 +230,12 @@ is_liked = Like.objects.filter(feed_id=feed.id, email=email, is_like=True).exist
 
 ## 2026-03-03
 
-<div style="display: flex; justify-content: center; gap: 20px;">
+<div style="display: flex; justify-content: left ; gap: 20px;">
   <img src="static/d_images/2026-03-03-1.png" width="250">
   <img src="static/d_images/2026-03-03-2.png" width="250">
 </div>
-  <img src="static/d_images/2026-03-03-3.png" width="500">
+<img src="static/d_images/2026-03-03-3.png" width="520">
+
 
 ### 🔐 회원가입 기능 구현 (AJAX 기반)
 - join.html에서 입력값(email, password, name, nickname) 수집
