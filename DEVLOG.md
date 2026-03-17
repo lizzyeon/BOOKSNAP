@@ -1,11 +1,52 @@
 # 📒 BOOKSNAP Development Log
 
+## 2026-03-16
+<div style="display: flex; justify-content: center ; gap: 10px">
+  <img src="static/d_images/2026-03-16-1.png" width="400">
+  <img src="static/d_images/2026-03-16-2.png" width="400">
+</div>
+
+### 🚫 팔로우 기능 예외 처리(자기 자신 팔로우 차단) 문제 해결
+- 목표) 자기 프로필의 팔로우 버튼 클릭 시, `Response(status=400)`와 함께 에러 메시지 전송되어야 함
+- 문제) 차단 로직이 작동하지 않고, AJAX POST 요청이 CSRF 검증에 실패하여 view까지 도달하지 못함(DB에 저장되지 않음)
+- 단서 1) 403 Forbidden 에러 발생
+  - 403은 보안토큰(CSRF)이 누락되어 요청이 차단됐을 때 발생
+  - 로그인을 한 상태임에도 서버가 현재 브라우저를 '인증된 상태'로 인정하지 않고 있음 확인
+- 단서 2) 자기 자신 팔로우 차단 로직이 작동하지 않음
+  - `if user.email == follower_email:` 로직이 정상적으로 작동되지 않음
+  - 이는 비교 대상인 `user.email`이 `None`이거나, `request.user`가 `AnonymousUser`(익명사용자)로 인식되어 비교 불가
+
+### 해결 1) 🔐 Django 표준 인증 도입 및 인증 방식 통합
+- 기존 `request.session['email']` : Django의 보안 인증 시스템과 연동되지 않아, 
+         다른 View에서 `request.user`를 호출하면 로그인 여부를 알 수 없는 `AnonymousUser`로 인식됨
+- 변경 `login(request, user)` : 모든 View의 유저 판별 로직을 표준 인증 방식으로 통합(`request.user.is_authenticated`)
+
+### 해결 2) 🔎 사용자 식별 로직 및 변수 충돌 수정
+- 기존 : `user = request.session.get('email')`에서 email 추출 후 `User.objects.filter(email=user)`로 DB 재조회
+- 변경 : `user = request.user`, `email = user.email`(불필요한 DB 조회 제거 및 코드 간결화)
+
+### 해결 3) 🛡️ AJAX CSRF 보안 이슈 해결
+- 기존 : POST 방식의 AJAX 요청 시 별도의 보안 토큰을 보내지 않음
+- 변경 : HTML에 `{% csrf_token %}` 추가, JS에 `$.ajaxSetup`로 CSRF 토큰 자동 포함
+  - Django는 POST 요청 시 CSRF 토큰을 요구하므로, AJAX 요청에도 반드시 포함해야 함
+
+📌 **배운 점**
+- Django의 보안 시스템인 `login(request, user)`를 활용하는 것이 여러모로 좋다. 
+  코드가 간단하기도 하고 모든 view에서 `request.user`로 접근할 수 있다.
+- login 정보를 DB에 저장한다고 끝이 아니라, `login(request, user)` 함수를 호출해 서버 세션에 유저를 등록해야 인증상태가 된다.
+  - 기존 방식에선 DB의 'last_login' 필드가 <null>이었으나, 표준 인증 방식을 도입하자 최종 로그인 기록이 자동으로 업데이트 됐다.
+- 팔로우나 게시물 작성처럼 DB 데이터를 수정하는 POST 요청 시에는, CSRF 토큰을 함께 사용해야 서버가 안전하다고 판단해 처리해준다
+
+<br><br><br><br>
+  
+---
+
 ## 2026-03-12
 
 <div style="display: flex; justify-content: center ; gap: 10px">
-  <img src="static/d_images/2026-03-12-1.png" width="350"><br>
-  <img src="static/d_images/2026-03-12-2.png" width="350"><br>
-  <img src="static/d_images/2026-03-12-3.png" width="350"><br>
+  <img src="static/d_images/2026-03-12-1.png" width="350">
+  <img src="static/d_images/2026-03-12-2.png" width="350">
+  <img src="static/d_images/2026-03-12-3.png" width="350">
 </div>
 
 ### 🗂 MySnap 페이지 탭 기능 구현 (Grid / Favorite / Bookmark)
