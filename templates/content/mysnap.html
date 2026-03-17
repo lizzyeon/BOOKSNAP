@@ -139,7 +139,6 @@
                             <li><a class="dropdown-item" href="#">
                                 <span class="material-symbols-outlined">photo_library</span>
                                 MY SNAP</a></li>
-                            <li><a class="dropdown-item" href="#">BOOKSHELF </a></li>
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
@@ -155,8 +154,8 @@
         <!-- 프로필 영역 -->
         <div style="background: #f4f4f4">
             <div style="display: flex; flex-direction: row; justify-content: center">
-                <div style="padding-top: 90px; padding-left: 60px; padding-right: 40px; padding-bottom: 20px">
-                    <!-- 프로필 사진 -->
+                <!-- 프로필 사진 -->
+                <div style="padding: 90px 40px 20px 60px;">
                     <div class="box" style="height: 150px; width: 150px">
                         <img class="profile" src="{% get_media_prefix %}{{ user.profile_image }}"
                              style="height:150px; width: 150px">
@@ -168,15 +167,55 @@
                     padding-right: 250px">
 
                     <!-- #1 줄 -->
-                    <div style="display: flex; justify-content: center; flex-direction: row">
-                        <div style="font-size: 25px; font-weight: bold">{{ user.nickname }}</div>
-                        <button id="button_profileupload" style="margin:0 40px" >프로필 사진 편집</button>
-                        <input type="file" id="input_fileupload" style="display: none" onchange="profile_upload()">
-                        <span class="material-symbols-outlined">Settings</span>
+                    <div style="display: flex; justify-content: left; flex-direction: row; align-items: center">
+
+                        <!-- Nickname -->
+                        <div style="font-size: 25px; font-weight: bold; margin-right: 5px">{{ user.nickname }}</div>
+
+                        <!-- 팔로우 -->
+                        <span id="follow_{{ user.id }}" following_email="{{ user.email }}"
+                            class="follow material-symbols-outlined click-fill {% if user.is_followed %}filled{% endif %}"
+                            style="cursor: pointer; color: dimgray; margin-right: 150px">
+                            check_circle
+                        </span>
+
+                        <!-- Setting Button -->
+                        <div>
+                            <!-- Click Setting -->
+                            <input type="file" id="input_fileupload" style="display: none" onchange="profile_upload()">
+                            <a href="#" role="button" id="setting_dropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <div class="box" style="height: 30px; width: 30px">
+                                    <span class="material-symbols-outlined click-fill" style="color: dimgray">settings</span>
+                                </div>
+                            </a>
+
+                            <!-- Setting Dropdown -->
+                            <ul class="dropdown-menu" style="left: -148px" aria-labelledby="setting_dropdown">
+                                <li><a class="dropdown-item" href="#">
+                                    <span class="material-symbols-outlined">account_circle</span>
+                                    계정 편집</a></li>
+                                <li><a id="dropdown_profileupload" class="dropdown-item" href="#">
+                                    <span class="material-symbols-outlined">photo_camera</span>
+                                    프로필 사진 편집</a></li>
+                            </ul>
+                        </div>
+
                     </div>
 
                     <!-- #2 줄 -->
-                    <div style="font-size: 15px">게시물 팔로워 팔로우</div>
+                    <div style="display:flex; gap: 30px; font-size: 17px; font-weight: bold">
+                        <div style="display:flex; gap: 7px; align-items: center">
+                            <div>게시물</div><div style="font-size: 20px">{{ feed_count }}</div>
+                        </div>
+                        <div style="display:flex; gap: 7px; align-items: center">
+                            <span>팔로워</span>
+                            <span id="follower_button" style="cursor:pointer; font-size: 20px">{{ follower_count }}</span>
+                        </div>
+                        <div style="display:flex; gap: 7px; align-items: center">
+                            <span>팔로잉</span>
+                            <span id="following_button" style="cursor:pointer; font-size: 20px">{{ following_count }}</span>
+                        </div>
+                    </div>
 
                     <!-- #3 줄 -->
                     <div style="font-size: 15px">{{ user.name }}</div>
@@ -327,12 +366,46 @@
             </div>
         </div>
 
-
         <!-- Modal Action -->
         <script>
 
-            /* 아이콘 filled 처리 */
-            $('.click-fill').click(function(event){
+            // 모든 AJAX 요청에 CSRF 토큰을 자동으로 포함시키는 설정
+            $.ajaxSetup({
+                beforeSend: function (xhr, settings) {
+                    if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", $('input[name="csrfmiddlewaretoken"]').val());
+                    }
+                },
+
+                headers: {
+                    'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
+                }
+            });
+
+            /* Click Follow */
+            $('.follow').click(function (event) {
+                let following_email = event.currentTarget.attributes.getNamedItem('following_email').value;
+                let follow_id = event.target.id;
+
+                if ($('#' + follow_id).hasClass('filled')) {
+                    $('#' + follow_id).removeClass('filled');
+                } else {
+                    $('#' + follow_id).addClass('filled');
+                }
+
+                $.ajax({
+                    data: { following_email: following_email },
+                    method: "POST",
+                    url: "/content/follow",
+
+                    success: function (data) {console.log("성공")},
+                    error: function () {console.log("에러")}
+                });
+
+            });
+
+            /* * 아이콘 filled 처리 * */
+            $('.click-fill').click(function (event) {
 
                 let button = $(event.currentTarget);
 
@@ -340,23 +413,23 @@
                 button.addClass('filled');
             });
 
-            /* Grid Button */
-            $('#button_feed_list').click(function () {
-                $('#feed_list').css('display', 'flex');
-                $('#like_feed_list, #bookmark_feed_list').hide();
-            });
+                /* Grid Button */
+                $('#button_feed_list').click(function () {
+                    $('#feed_list').css('display', 'flex');
+                    $('#like_feed_list, #bookmark_feed_list').hide();
+                });
 
-            /* Favorite Button */
-            $('#button_like_feed_list').click(function () {
-                $('#like_feed_list').css('display', 'flex');
-                $('#feed_list, #bookmark_feed_list').hide();
-            });
+                /* Favorite Button */
+                $('#button_like_feed_list').click(function () {
+                    $('#like_feed_list').css('display', 'flex');
+                    $('#feed_list, #bookmark_feed_list').hide();
+                });
 
-            /* Bookmark Button */
-            $('#button_bookmark_feed_list').click(function () {
-                $('#bookmark_feed_list').css('display', 'flex');
-                $('#feed_list, #like_feed_list').hide();
-            });
+                /* Bookmark Button */
+                $('#button_bookmark_feed_list').click(function () {
+                    $('#bookmark_feed_list').css('display', 'flex');
+                    $('#feed_list, #like_feed_list').hide();
+                });
 
 
             /* Close Modal */
@@ -481,7 +554,8 @@
             });
 
             /* '프로필 사진 편집 버튼'으로 프로필 사진 바꾸기 */
-            $('#button_profileupload').click(function (){
+            $('#dropdown_profileupload').click(function (e){
+                e.preventDefault();
                 $('#input_fileupload').click();
             });
 
@@ -517,4 +591,5 @@
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     </body>
+{% csrf_token %}
 </html>

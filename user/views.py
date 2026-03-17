@@ -2,9 +2,12 @@ import os
 from uuid import uuid4
 from BOOKSNAP.settings import MEDIA_ROOT
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth import login
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from content.models import Follow
 from .models import User
 
 # 회원가입
@@ -32,6 +35,9 @@ class Login(APIView):
         return render(request, "user/login.html")
 
     def post(self, request):
+        print(f"현재 로그인한 유저: {request.user}")
+        print(f"로그인 상태: {request.user.is_authenticated}")
+
         email = request.data.get('email', None)
         password = request.data.get('password', None)
 
@@ -41,7 +47,7 @@ class Login(APIView):
             return Response(status=400, data=dict(message="회원정보를 다시 한 번 확인해주세요."))
 
         if user.check_password(password):
-            request.session['email'] = email
+            login(request, user)
             return Response(status=200)
         else:
             return Response(status=400, data=dict(message="회원정보를 다시 한 번 확인해주세요."))
@@ -75,4 +81,3 @@ class UploadProfile(APIView):
         user.save()                                         # DB에 저장
 
         return Response(status=200)
-

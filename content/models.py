@@ -12,6 +12,9 @@ class Like(models.Model):
     email = models.EmailField(default='')           # 좋아요 누른 사람(email에 저장된 user 활용)
     is_like = models.BooleanField(default=True)     # 좋아요를 취소하면 update(delete가 아닌 T ↔ F)
 
+    class Meta:
+        unique_together = ('feed_id', 'email')      # 두 개가 같은 조합은 한 번만 있다(중복 X)
+
 # 댓글
 class Reply(models.Model):
     feed_id = models.IntegerField()                 # 몇 번 피드에 대해서
@@ -23,3 +26,15 @@ class Bookmark(models.Model):
     feed_id = models.IntegerField()                 # 몇 번 피드에 대해서
     email = models.EmailField(default='')           # 북마크 한 사람
     is_marked = models.BooleanField(default=True)   # 북마크 취소하면 update(T ↔ F)
+
+    class Meta:
+        unique_together = ('feed_id', 'email')
+
+# 팔로우
+class Follow(models.Model):
+    following_email = models.EmailField(default='') # 팔로우 당하는 사람(클릭한 대상)
+    follower_email = models.EmailField(default='')  # 팔로우 하는 사람(로그인한 사람)
+    is_followed = models.BooleanField(default=True) # 팔로우 취소하면 update(T ↔ F)
+
+    class Meta:
+        unique_together = ('follower_email', 'following_email')

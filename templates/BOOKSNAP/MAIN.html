@@ -145,7 +145,6 @@
                     <li><a class="dropdown-item" href="/content/mysnap">
                         <span class="material-symbols-outlined">photo_library</span>
                         MY SNAP</a></li>
-                    <li><a class="dropdown-item" href="/content/bookshelf">BOOKSHELF </a></li>
                     <li><hr class="dropdown-divider"></li>
                     <li><a class="dropdown-item" href="/user/logout">
                         <span class="material-symbols-outlined">Logout</span>
@@ -394,22 +393,14 @@
                 $('#' + favorite_id).addClass('filled');    // 비어있으면 filled 클래스 추가(좋아요)
             }
 
-            $.ajax({                                        // AJAX로 서버에 요청
-                data: {                                     // 서버로 보낼 데이터
-                    feed_id: feed_id,                       // 피드 번호
-                },
+            $.ajax({
+                data: {feed_id: feed_id},
                 method: "POST",
-                url: "/content/like",                       // 해당 url로 보내라
+                url: "/content/like",
 
-                success: function (data) {
-                    console.log("성공");
-                },
-                error: function (request, status, error) {
-                    console.log("에러");
-                },
-                complete: function () {
-                    console.log("완료");
-                }
+                success: function (data) {console.log("성공")},
+                error: function (request, status, error) {console.log("에러");},
+                complete: function () {console.log("완료");}
             });
 
         });
@@ -425,21 +416,13 @@
             }
 
             $.ajax({                                        // 서버에 AJAX 요청
-                data: {                                     // 서버로 보낼 데이터
-                    feed_id: feed_id,                       // 피드 번호
-                },
+                data: { feed_id: feed_id },                // 서버로 보낼 데이터
                 method: "POST",
                 url: "/content/bookmark",
 
-                success: function (data) {
-                    console.log("성공");
-                },
-                error: function (request, status, error) {
-                    console.log("에러");
-                },
-                complete: function () {
-                    console.log("완료");
-                }
+                success: function (data) {console.log("성공")},
+                error: function (request, status, error) {console.log("에러")},
+                complete: function () {console.log("완료")}
             });
 
         });
@@ -457,10 +440,7 @@
             }
 
             $.ajax({                                        // 서버에 AJAX 요청
-                data: {                                     // 서버로 보낼 데이터
-                    feed_id: feed_id,                       // 피드 번호와 내용
-                    reply_content: reply_content
-                },
+                data: {feed_id: feed_id, reply_content: reply_content},
                 method: "POST",
                 url: "/content/reply",
 
@@ -608,5 +588,5 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-
+{% csrf_token %}
 </html>
