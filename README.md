@@ -87,7 +87,7 @@ Reading-Record-WEB
 ## 🏃 Run Locally
 
 ```bash
-git clone https://github.com/lizzyeon/Reading-Record-WEB.git
+git clone https://github.com/lizzyeon/BOOKSNAP.git
 cd Reading-Record-WEB
 
 pip install -r requirements.txt

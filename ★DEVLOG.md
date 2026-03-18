@@ -1,9 +1,62 @@
 # 📒 BOOKSNAP Development Log
 
+## 2026-03-18
+
+1. 피드 프로필 사진 눌러 다른 유저 프로필 들어가기
+<div style="display: flex; justify-content:left ; gap: 10px">
+  <img src="static/d_images/2026-03-18-1.png" width="400" height="250">
+  <img src="static/d_images/2026-03-18-2.png" width="400" height="250">
+</div>
+
+2. 팔로우 버튼 클릭 → 팔로워 수 & 팔로잉 수 카운팅 | 본인 피드 팔로우 버튼 숨기기
+<div style="display: flex; justify-content: left; gap: 10px">
+  <img src="static/d_images/2026-03-18-3.png" width="300">
+  <img src="static/d_images/2026-03-18-4.png" width="300">
+  <img src="static/d_images/2026-03-18-5.png" width="300">
+</div>
+
+### 👤 프로필 이동 기능(피드 → 다른 유저 프로필)
+- 피드에 표시된 프로필 이미지를 클릭하면 해당 유저의 프로필 페이지로 이동<br>
+- 기존에는 `/content/mysnap`으로 로그인 유저 본인의 프로필 조회만 가능했었지만<br>
+  URL에 `nickname`을 포함하도록 변경하여 다른 유저 프로필도 조회 가능하도록 개선
+  - url : `path('mysnap/<str:nickname>/', MySnap.as_view(), name='mysnap')`
+  - html : `<a href="/content/mysnap/{{ feed.nickname }}">`
+- 기존에는 `user`로 모든 유저를 통칭하여 사용에 혼란이 있었음. <br>
+  `login_user`(현재 로그인한 유저) `profile_user`(그 외 다른 유저)로 구분하여 하나의 템플릿에서 내 프로필과 타인 프로필 모두 처리하도록 개선
+
+### 🔄 팔로우 기능 개선 (Ajax 기반 실시간 반영)
+- 팔로우 버튼 클릭 시, 팔로잉 수를 페이지 새로고침 없이 즉시 반영 (비동기 통신)
+```
+let count = parseInt($('#following_count').text()); 
+if (data.is_followed) { 
+  $('#following_count').text(count + 1);
+} else { 
+  $('#following_count').text(count -1); 
+  }
+```
+- 팔로우 버튼 클릭 시, `is_followed` 값을 기준으로 버튼 상태 즉시 변경
+```
+if(data.is_followed) { 
+  $('#' + follow_id).addClass('filled'); 
+} else { 
+  $('#' + follow_id).removeClass('filled'); 
+}
+```
+- 템플릿 if 조건문을 활용하여 본인 프로필에서는 팔로우 버튼 숨김 처리
+`{% if login_user.email != profile_user.email %}`
+
+📌 **배운 점**
+- URL에 파라미터(`nickname`)을 포함하여 하나의 View로 다양한 사용자 데이터를 처리할 수 있음
+- `path(..., name='mysnap')`과 같이 URL에 이름을 부여하면, HTML에서 해당 URL 변경 시 편리함
+- Ajax를 통해 프론트엔드와 백엔드 간 비동기 데이터 흐름을 이해하고, 서버 응답을 기반으로 UI를 즉시 반영하는 구조를 이해
+<br><br><br><br>
+
+---
+
 ## 2026-03-16
 <div style="display: flex; justify-content: center ; gap: 10px">
-  <img src="static/d_images/2026-03-16-1.png" width="400">
-  <img src="static/d_images/2026-03-16-2.png" width="400">
+<div>1. 자기자신 팔로우 시 에러 메시지<img src="static/d_images/2026-03-16-1.png" width="400"></div>
+<div>2. 기존 : NULL ➡️ 변경 : 로그인 정보 기록<img src="static/d_images/2026-03-16-2.png" width="400"></div>
 </div>
 
 ### 🚫 팔로우 기능 예외 처리(자기 자신 팔로우 차단) 문제 해결

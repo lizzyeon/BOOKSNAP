@@ -142,7 +142,7 @@
 
                 <!-- 드롭다운 -->
                 <ul class="dropdown-menu" style="left: -148px" aria-labelledby="dropdownMenuLink">
-                    <li><a class="dropdown-item" href="/content/mysnap">
+                    <li><a class="dropdown-item" href="/content/mysnap/{{ request.user.nickname }}">
                         <span class="material-symbols-outlined">photo_library</span>
                         MY SNAP</a></li>
                     <li><hr class="dropdown-divider"></li>
@@ -164,14 +164,20 @@
 
                     <!-- 프로필 -->
                     <div style="display: flex; flex-direction: row; align-items: center; margin: 10px">
+
                         <!-- 프로필 사진 -->
-                        <div class="box" style="height: 60px; width: 60px">
-                            <img class="profile" src="{% get_media_prefix %}{{ feed.profile_image }}" style="height:60px; width: 60px">
-                        </div>
+                        <a href="/content/mysnap/{{ feed.nickname }}">
+                            <div class="box" style="height: 60px; width: 60px">
+                                <img class="profile" src="{% get_media_prefix %}{{ feed.profile_image }}"
+                                     style="height:60px; width: 60px; cursor: pointer">
+                            </div>
+                        </a>
+
                         <!-- 아이디 -->
-                        <div style="margin-left: 10px">
+                        <div style="margin-left: 10px; padding-right: 10px; font-size: 21px">
                             <b>{{ feed.nickname }}</b>
                         </div>
+
                     </div>
 
                     <!-- 게시물(사진) -->

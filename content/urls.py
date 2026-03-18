@@ -4,7 +4,7 @@ from .views import UploadFeed, MySnap, Main, UploadReply, ToggleLike, ToggleBook
 
 urlpatterns = [
     path('upload', UploadFeed.as_view()),
-    path('mysnap', MySnap.as_view()),
+    path('mysnap/<str:nickname>/', MySnap.as_view(), name='mysnap'),
     path('main', Main.as_view()),
     path('reply', UploadReply.as_view()),
     path('like', ToggleLike.as_view()),

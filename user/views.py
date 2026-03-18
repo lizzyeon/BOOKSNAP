@@ -29,28 +29,28 @@ class Join(APIView):
 
         return Response(status=200)
 
+
 # 로그인
 class Login(APIView):
     def get(self, request):
         return render(request, "user/login.html")
 
-    def post(self, request):
-        print(f"현재 로그인한 유저: {request.user}")
-        print(f"로그인 상태: {request.user.is_authenticated}")
+    def post(self, request):                                    # 0. 로그인 시도
 
-        email = request.data.get('email', None)
+        email = request.data.get('email', None)                 # 1. 사용자가 입력한 이메일, 비밀번호 가져옴
         password = request.data.get('password', None)
 
-        user = User.objects.filter(email=email).first()
+        user = User.objects.filter(email=email).first()         # 2. DB에서 이메일로 사용자 찾기
 
-        if user is None:
+        if user is None:                                        # 3-1. 이메일 잘 못 입력 시(이메일 없을 때)
             return Response(status=400, data=dict(message="회원정보를 다시 한 번 확인해주세요."))
 
-        if user.check_password(password):
-            login(request, user)
-            return Response(status=200)
-        else:
+        if user.check_password(password):                       # 4. 비밀번호 맞는지 확인
+            login(request, user)                                # 5. login한 사용자를 user와 연결하여 request
+            return Response(status=200)                         #     └ > request.user로 호출 가능
+        else:                                                   # 3-2. 비밀번호 잘 못 입력 시
             return Response(status=400, data=dict(message="회원정보를 다시 한 번 확인해주세요."))
+
 
 # 로그아웃
 class LogOut(APIView):
@@ -59,6 +59,7 @@ class LogOut(APIView):
         return render(request, "user/login.html")
 
 
+# 프로필 변경
 class UploadProfile(APIView):
     def post(self, request):
 

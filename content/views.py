@@ -11,10 +11,9 @@ from BOOKSNAP.settings import MEDIA_ROOT
 class Main(APIView):    # /main 페이지를 보여줘라
     def get(self, request):                               # 페이지를 열 때(get) 실행되는 함수
 
-        if not request.user.is_authenticated:
-            return render(request, "user/login.html")
+        if not request.user.is_authenticated:                       # request.user는 authenticated(로그인 된) 상태인가?
+            return render(request, "user/login.html")  # 로그인 안됐으면 로그인 페이지로 보내라
 
-        # user 정보를 편하게 사용하기 위함(프로필 등에)
         user = request.user
         email = user.email
 
@@ -91,13 +90,21 @@ class UploadFeed(APIView):
 
 
 class MySnap(APIView):
-    def get(self, request):
+    def get(self, request, nickname):
 
         if not request.user.is_authenticated:
             return render(request, "user/login.html")
 
-        user = request.user
-        email = user.email
+        profile_user = User.objects.filter(nickname=nickname).first()
+
+        if profile_user is None:
+            return Response(status=404)
+
+        email = profile_user.email
+
+        is_followed = Follow.objects.filter(follower_email=request.user.email,   # 로그인한 유저가
+                                            following_email=profile_user.email,  # 해당 유저를
+                                            is_followed=True).exists()           # 현재 팔로우 상태(True)인 것만 filter
 
         # 내 게시물 | 좋아요 게시물 | 북마크 게시물
         feed_list = Feed.objects.filter(email=email).all().order_by('-id')
@@ -107,18 +114,20 @@ class MySnap(APIView):
         bookmark_feed_list = Feed.objects.filter(id__in=bookmark_list).order_by('-id')
 
         # 게시물 수 | 팔로워 수 | 팔로잉 수
-        feed_count = Feed.objects.filter(email=email).count()                   # 내 게시물 수 계산
-        follower_count = Follow.objects.filter(follower_email=email).count()   # 나를 팔로우하는 사람 수 계산
-        following_count = Follow.objects.filter(following_email=email).count()   # 내가 팔로우하는 사람 수 계산
+        feed_count = Feed.objects.filter(email=email).count()
+        follower_count = Follow.objects.filter(follower_email=email, is_followed=True).count()
+        following_count = Follow.objects.filter(following_email=email, is_followed=True).count()
 
         # html로 데이터 전달
         return render(request, 'content/mysnap.html', context=dict(feed_list=feed_list,
                                                                                 like_feed_list=like_feed_list,
                                                                                 bookmark_feed_list=bookmark_feed_list,
-                                                                                user=user,
+                                                                                profile_user=profile_user,  # 프로필 주인
+                                                                                login_user=request.user,    # 로그인한 유저
                                                                                 feed_count=feed_count,
                                                                                 follower_count=follower_count,
-                                                                                following_count=following_count))
+                                                                                following_count=following_count,
+                                                                                is_followed=is_followed))
 
 
 class UploadReply(APIView):
@@ -183,6 +192,6 @@ class ToggleFollow(APIView):
             follow.is_followed = not follow.is_followed
             follow.save()
 
-        return Response(status=200)
+        return Response({"is_followed": follow.is_followed},status=200)
 
 
