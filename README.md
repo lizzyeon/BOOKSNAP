@@ -32,10 +32,20 @@ Instagram 클론코딩을 참고하여 만든 **독서 기록 웹 서비스**입
 ## Implemented Features
 
 - navbar 레이아웃 구현(BOOKSNAP 로고 제작 포함)
+- 회원가입 / 로그인 기능
+- 게시글 업로드 (이미지 + 텍스트)
+- 피드 화면 구현
+    - 좋아요 기능
+    - 북마크 기능 
+    - 댓글 기능
+- 프로필 페이지
+  - 프로필 수정
+  - 내가 올린 피드 모아보기
+  - 좋아요 / 북마크 피드 모아보기
 
 ---
 
-## Roadmap
+## In Progress
 
 - 회원가입 / 로그인 기능
 - 게시글 업로드 (이미지 + 텍스트)
@@ -43,6 +53,21 @@ Instagram 클론코딩을 참고하여 만든 **독서 기록 웹 서비스**입
 - 좋아요 기능
 - 댓글 기능
 - 프로필 페이지
+
+---
+
+## Roadmap
+
+- 팔로우 기능
+- 프로필 페이지
+  - 팔로워 / 팔로잉 수 표시
+  - 팔로워 / 팔로잉 목록 조회
+- 다른 사람 프로필로 이동 기능
+- 게시글 업로드(확장)
+  - 읽은 페이지, 장르, 제목, 작가 입력
+  - 해시태그 기반 관련 게시물 추천
+- 독서 통계 기능
+  - 워간 / 연간 독서 기록
 
 ---
 
@@ -62,9 +87,12 @@ Reading-Record-WEB
 ## 🏃 Run Locally
 
 ```bash
-git clone https://github.com/your-id/Reading-Record-WEB.git
+git clone https://github.com/lizzyeon/Reading-Record-WEB.git
 cd Reading-Record-WEB
+
 pip install -r requirements.txt
+
+python manage.py migrate
 python manage.py runserver
 ```
 ---
