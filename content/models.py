@@ -1,4 +1,5 @@
 from django.db import models
+from user.models import User
 
 # 피드
 class Feed(models.Model):
@@ -32,9 +33,9 @@ class Bookmark(models.Model):
 
 # 팔로우
 class Follow(models.Model):
-    following_email = models.EmailField(default='') # 팔로우 당하는 사람(클릭한 대상)
-    follower_email = models.EmailField(default='')  # 팔로우 하는 사람(로그인한 사람)
+    from_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followings') # 팔로우 하는 유저
+    to_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followers')    # 팔로우 당하는 유저
     is_followed = models.BooleanField(default=True) # 팔로우 취소하면 update(T ↔ F)
 
     class Meta:
-        unique_together = ('follower_email', 'following_email')
+        unique_together = ('from_user', 'to_user')

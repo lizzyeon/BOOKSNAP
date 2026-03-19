@@ -18,7 +18,7 @@ class Main(APIView):    # /main 페이지를 보여줘라
         email = user.email
 
         feed_object_list = Feed.objects.all().order_by('-id')      # feed 테이블의 모든(all) 데이터(objects)를 가져옴.
-        following_list = Follow.objects.filter(follower_email=email).values_list('following_email', flat=True)
+        following_list = Follow.objects.filter(from_user=request.user, is_followed=True).values_list('to_user', flat=True)
 
         # 피드 구성
         feed_list = []       # feed, user, reply 등 데이터를 하나로 묶어 담을 리스트. 이것들이 합쳐서 하나의 피드를 만듦
@@ -29,7 +29,7 @@ class Main(APIView):    # /main 페이지를 보여줘라
                 continue
 
             reply_object_list = Reply.objects.filter(feed_id=feed.id)   # 이 게시물에 달린(feed_id가 같은) 댓글 가져오기
-            is_followed = feed.email in following_list
+            is_followed = feed_user.id in following_list
 
             # 댓글 구성
             reply_list = []
@@ -95,16 +95,16 @@ class MySnap(APIView):
         if not request.user.is_authenticated:
             return render(request, "user/login.html")
 
-        profile_user = User.objects.filter(nickname=nickname).first()
+        profile_user = User.objects.filter(nickname=nickname).first()   # 해당 프로필을 사용하고 있는 유저
 
         if profile_user is None:
             return Response(status=404)
 
         email = profile_user.email
 
-        is_followed = Follow.objects.filter(follower_email=request.user.email,   # 로그인한 유저가
-                                            following_email=profile_user.email,  # 해당 유저를
-                                            is_followed=True).exists()           # 현재 팔로우 상태(True)인 것만 filter
+        is_followed = Follow.objects.filter(from_user=request.user,      # 로그인한 유저가
+                                            to_user=profile_user,        # 해당 유저를
+                                            is_followed=True).exists()   # 현재 팔로우 상태(True)인 것만 filter
 
         # 내 게시물 | 좋아요 게시물 | 북마크 게시물
         feed_list = Feed.objects.filter(email=email).all().order_by('-id')
@@ -113,17 +113,22 @@ class MySnap(APIView):
         bookmark_list = list(Bookmark.objects.filter(email=email, is_marked=True).values_list('feed_id', flat=True))
         bookmark_feed_list = Feed.objects.filter(id__in=bookmark_list).order_by('-id')
 
+        # 팔로워 유저 | 팔로잉 유저
+        followers = Follow.objects.filter(to_user=profile_user, is_followed=True)    # 팔로워 : 프로필 유저에게 팔로우하는 유저들
+        followings = Follow.objects.filter(from_user=profile_user, is_followed=True) # 팔로잉 : 프로필 유저가 팔로우하는 유저들
+
         # 게시물 수 | 팔로워 수 | 팔로잉 수
         feed_count = Feed.objects.filter(email=email).count()
-        follower_count = Follow.objects.filter(follower_email=email, is_followed=True).count()
-        following_count = Follow.objects.filter(following_email=email, is_followed=True).count()
+        follower_count = followers.count()
+        following_count = followings.count()
 
         # html로 데이터 전달
         return render(request, 'content/mysnap.html', context=dict(feed_list=feed_list,
                                                                                 like_feed_list=like_feed_list,
                                                                                 bookmark_feed_list=bookmark_feed_list,
                                                                                 profile_user=profile_user,  # 프로필 주인
-                                                                                login_user=request.user,    # 로그인한 유저
+                                                                                followers=followers,
+                                                                                followings=followings,
                                                                                 feed_count=feed_count,
                                                                                 follower_count=follower_count,
                                                                                 following_count=following_count,
@@ -171,27 +176,35 @@ class ToggleBookmark(APIView):
 
 class ToggleFollow(APIView):
     def post(self, request):
-        following_email = request.data.get('following_email', None)        # 팔로우 대상
-        follower_email = request.user.email                                # 팔로우 누른 사람(로그인 사용자)
 
-        if not follower_email:
-            return Response({'error':'로그인이 필요합니다.'}, status=401)
+        if not request.user.is_authenticated:
+            return render(request, "user/login.html")
 
-        if not following_email:
+        # 대상 유저 id
+        to_user_id = request.data.get('to_user_id', None)
+
+        if not to_user_id:
             return Response({'error':'대상 유저가 없습니다.'}, status=400)
 
-        if following_email == follower_email:
-            print("❌ 자기 자신 팔로우 시도됨")
+        # 대상 유저 가져오기
+        try:
+            to_user = User.objects.get(id=to_user_id)
+        except User.DoesNotExist:
+            return Response({'error':'유저가 존재하지 않습니다.'}, status=404)
+
+        # 자기 자신 팔로우 방지
+        if request.user == to_user:
             return Response({'error':'자기 자신은 팔로우할 수 없습니다.'}, status=400)
 
-        # 중복 확인
-        follow, created = Follow.objects.get_or_create(following_email=following_email, # created(만들어진 게) 있나?
-                                                       follower_email=follower_email,   # 있으면 get(가져오고)
+        # 팔로우 생성/토글 (중복 확인)
+        follow, created = Follow.objects.get_or_create(from_user=request.user,          # created(만들어진 게) 있나?
+                                                       to_user=to_user,                 # 있으면 get(가져오고)
                                                        defaults={'is_followed':True})   # 없으면 create(True를 defaults로 만들어라)
         if not created:
             follow.is_followed = not follow.is_followed
             follow.save()
 
+        # 결과
         return Response({"is_followed": follow.is_followed},status=200)
 
 

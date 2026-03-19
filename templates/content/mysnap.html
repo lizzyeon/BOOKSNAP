@@ -134,13 +134,13 @@
                         <!-- 프로필 -->
                         <a href="#" role="button" id="dropdownMenuLink" data-bs-toggle="dropdown" aria-expanded="false">
                             <div class="box" style="height: 30px; width: 30px">
-                                <img class="profile" src="{% get_media_prefix %}{{ login_user.profile_image }}" style="height:30px; width: 30px">
+                                <img class="profile" src="{% get_media_prefix %}{{ request.user.profile_image }}" style="height:30px; width: 30px">
                             </div>
                         </a>
 
                         <!-- 드롭다운 -->
                         <ul class="dropdown-menu" style="left: -148px" aria-labelledby="dropdownMenuLink">
-                            <li><a class="dropdown-item" href="/content/mysnap/{{ login_user.nickname }}">
+                            <li><a class="dropdown-item" href="/content/mysnap/{{ request.user.nickname }}">
                                 <span class="material-symbols-outlined">photo_library</span>
                                 MY SNAP</a></li>
                             <li>
@@ -180,8 +180,8 @@
                             </div>
 
                             <!-- 팔로우 -->
-                            {% if login_user.email != profile_user.email %}
-                                <span id="follow_{{ profile_user.id }}" following_email="{{ profile_user.email }}"
+                            {% if request.user != profile_user %}
+                                <span id="follow_{{ profile_user.id }}" to_user_id="{{ profile_user.id }}"
                                     class="follow material-symbols-outlined {% if is_followed %}filled{% endif %}"
                                     style="cursor: pointer; color: dimgray">
                                     check_circle
@@ -237,27 +237,88 @@
                         </div>
 
                         <!-- 팔로워 -->
-                        <div>
-                            <div style="display:flex; gap: 7px; align-items: center">
-                                <span>팔로워</span>
-                                <a href="#" role="button" id="following_dropdown" data-bs-toggle="dropdown" aria-expanded="false"
-                                   style="text-decoration: none">
-                                    <span id="following_count" style="cursor:pointer; font-size: 20px; color: black">
-                                        {{ following_count }}
-                                    </span>
-                                </a>
-                            </div>
+                        <div style="display:flex; gap: 7px; align-items: center">
+
+                            <span>팔로워</span>
+
+                            <!-- 팔로워 수 -->
+                            <a href="#" role="button" id="follower_dropdown" data-bs-toggle="dropdown"
+                               aria-expanded="false"
+                               style="text-decoration: none">
+                                <span id="follower_count" style="cursor:pointer; font-size: 20px; color: black">
+                                    {{ follower_count }}
+                                </span>
+                            </a>
 
                             <!-- Dropdown -->
-                            <ul class="dropdown-menu" style="left: 0px" aria-labelledby="following_dropdown">
-                                <li>여기는팔로워들이나올거예요</li>
+                            <ul class="dropdown-menu" aria-labelledby="follower_dropdown">
+
+                                {% if followers %}
+                                    {% for f in followers %}
+                                        <li><a class="dropdown-item" href="/content/mysnap/{{ f.from_user.nickname }}">
+
+                                            <!-- 프로필 사진 -->
+                                            <div class="box" style="height: 40px; width: 40px">
+                                                <img class="profile"
+                                                     src="{% get_media_prefix %}{{ f.from_user.profile_image }}"
+                                                     style="height:40px; width: 40px">
+                                            </div>
+
+                                            <!-- Nickname -->
+                                            <div style="font-size: 15px; font-weight: bold; margin-left: 10px">
+                                                {{ f.from_user.nickname }}
+                                            </div>
+                                        </a></li>
+                                    {% endfor %}
+
+                                {% else %}
+                                    <li><a class="dropdown-item"> None</a></li>
+                                {% endif %}
+
                             </ul>
                         </div>
 
                         <!-- 팔로잉 -->
                         <div style="display:flex; gap: 7px; align-items: center">
+
                             <span>팔로잉</span>
-                            <span id="follower_button" style="cursor:pointer; font-size: 20px">{{ follower_count }}</span>
+
+                            <!-- 팔로잉 수 -->
+                            <a href="#" role="button" id="following_dropdown" data-bs-toggle="dropdown"
+                               aria-expanded="false"
+                               style="text-decoration: none">
+                                <span id="following_count" style="cursor:pointer; font-size: 20px; color: black">
+                                    {{ following_count }}
+                                </span>
+                            </a>
+
+                            <!-- Dropdown -->
+                            <ul class="dropdown-menu" style="left: -148px" aria-labelledby="following_dropdown">
+                                {% if followings %}
+
+                                    {% for f in followings %}
+                                        <li><a class="dropdown-item" href="/content/mysnap/{{ f.to_user.nickname }}">
+
+                                            <!-- 프로필 사진 -->
+                                            <div class="box" style="height: 40px; width: 40px">
+                                                <img class="profile"
+                                                     src="{% get_media_prefix %}{{ f.to_user.profile_image }}"
+                                                     style="height:40px; width: 40px">
+                                            </div>
+
+                                            <!-- Nickname -->
+                                            <div style="font-size: 15px; font-weight: bold; margin-left: 10px">
+                                                {{ f.to_user.nickname }}
+                                            </div>
+
+                                        </a></li>
+                                    {% endfor %}
+                                {% else %}
+                                    <li><a class="dropdown-item"> None</a></li>
+                                {% endif %}
+
+
+                            </ul>
                         </div>
                     </div>
 
@@ -426,13 +487,14 @@
                 }
             });
 
+
             /* Click Follow */
             $('.follow').click(function (event) {
-                let following_email = event.currentTarget.getAttribute('following_email');
+                let to_user_id = event.currentTarget.getAttribute('to_user_id');
                 let follow_id = event.target.id;
 
                 $.ajax({
-                    data: { following_email: following_email },
+                    data: { to_user_id: to_user_id },
                     method: "POST",
                     url: "/content/follow",
 
@@ -443,13 +505,13 @@
                             $('#' + follow_id).removeClass('filled');
                         }
 
-                        // 팔로잉 수 바로 변경
-                        let count = parseInt($('#following_count').text());   // 현재 팔로잉 수 count
+                        // 팔로워 수 바로 변경
+                        let count = parseInt($('#follower_count').text());
 
                         if (data.is_followed) {
-                            $('#following_count').text(count + 1);
+                            $('#follower_count').text(count + 1);
                         } else {
-                            $('#following_count').text(count -1);
+                            $('#follower_count').text(count -1);
                         }
                     },
 
