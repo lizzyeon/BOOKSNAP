@@ -1,5 +1,67 @@
 # 📒 BOOKSNAP Development Log
 
+## 2026-03-19
+팔로워 / 팔로잉 리스트 드롭다운
+<div style="display: flex; justify-content:left ; gap: 10px">
+  <img src="static/d_images/2026-03-19-2.png" width="300" height="100">
+  <img src="static/d_images/2026-03-19-3.png" width="300" height="100">
+</div>
+
+### 👥 팔로워 드롭다운 기능 구현
+- 프로필 화면에서 팔로워 수를 클릭하면 해당 사용자의 팔로워 목록이 드롭다운 형태로 표시되도록 구현
+- for 조건문을 사용하여 모든 팔로우 유저 조회 `{% for r in followers %}`
+- 문제) 드롭다운에 팔로워 목록이 조회되지 않음<br>
+  <img src="static/d_images/2026-03-19-1.png" width="200" height="70">
+- 원인) `follower`와 `following`의 방향성을 혼동하여 잘못된 기준으로 데이터를 조회 함
+- 해결 1) 직관적인 이름으로 혼동 방지 : `from_user`(팔로우 하는 유저), `to_user`(팔로우 받는 유저)
+- 해결 2) 기존 email 기반 구조를 ForeignKey로 변경하여 User 모델과 직접 연결되도록 개선
+
+### 🛠️ Follow 모델 구조 개선 (Email → ForeignKey 전환)
+- 기존)
+```
+following_email = models.EmailField()
+follower_email = models.EmailField()
+```
+- 문제) 이 방식은 단순 email 문자열 비교로 관계를 처리하기 때문에 다음과 같은 한계가 있음
+  - 1. user 모델과 직접적인 연관이 없어 추가 정보(닉네임, 프로필 이미지 등)를 가져오기 위해 매번 별도 조회 필요
+  - 2. user 이메일 변경 시 follow 데이터와의 정합성 깨질 위험
+  - 3. 관계의 방향성이 명확하지 않아 `follower`, `following` 개념 혼동
+- 변경)
+```
+from_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followings')
+to_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followers')
+```
+- ForeignKey 기반 구조로 변경
+  - Follow 모델이 User을 직접 참조하게 되어 데이터 일관성 확보, 정합성 보장
+  - 이메일이 아닌 객체 기반 관계 관리로 안정성 향상
+  - `related_name`을 통해 역참조 가능(`followers`,`followings`)
+  - 조회 로직 단순화
+  ``` 
+  # 기존
+  user = User.objects.filter(email=follow.follower_email).first()
+  nickname = user.nickname
+
+  # 변경
+  nickname = follow.from_user.nickname
+  ```
+  
+📌 **배운 점**
+- `ForeignKey`를 활용해 user를 기준으로 데이터 관계를 연결할 수 있음
+  - 단순 값(email)이 아닌 객체(User)를 기준으로 관계를 설정해야 정합성과 유지보수성이 확보될 수 있음
+- `related_name`(역참조)를 활용하면 코드가 간단하고 명확해짐
+  - 역참조를 통해 Follow 모델을 직접 조회하지 않고도 User 기준으로 관계 데이터를 직관적으로 접근할 수 있음 
+  ```
+  * 역참조가 없다면   followers = Follow.objects.filter(to_user=B)
+                     result = []
+                     for f in followers:
+                         result.append(f.from_user)
+
+  * 역참조 사용 시     B.followers.all()
+  ```
+<br><br><br><br>
+
+---
+
 ## 2026-03-18
 
 1. 피드 프로필 사진 눌러 다른 유저 프로필 들어가기
