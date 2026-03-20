@@ -1,3 +1,4 @@
+from django.http import JsonResponse
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -39,7 +40,7 @@ class Main(APIView):    # /main 페이지를 보여줘라
                 if reply_user:
                     reply_list.append(dict(nickname=reply_user.nickname, reply_content=reply.reply_content))
 
-            # 좋아요 처리
+            # 좋아요/북마크 처리
             like_count = Like.objects.filter(feed_id=feed.id, is_like=True).count()             # 좋아요 총 개수
             is_liked = Like.objects.filter(feed_id=feed.id, email=email, is_like=True).exists() # 사용자의 좋아요 누름 여부
             is_marked = Bookmark.objects.filter(feed_id=feed.id, email=email, is_marked=True).exists()
@@ -78,9 +79,8 @@ class UploadFeed(APIView):
             for chunk in file.chunks():                  # 작은 조각으로 나눠 저장(이미지는 용량이 크기 때문)
                 destination.write(chunk)
 
-        image = save_name
         content = request.data.get('content')
-        email = request.session.get('email', None)
+        email = request.user.email
 
         # DB 저장
         Feed.objects.create(image=save_name, content=content, email=email)
@@ -132,13 +132,44 @@ class MySnap(APIView):
                                                                                 feed_count=feed_count,
                                                                                 follower_count=follower_count,
                                                                                 following_count=following_count,
+
                                                                                 is_followed=is_followed))
+
+def feed_detail(request):
+    feed_id = request.GET.get('feed_id', None)
+    if not feed_id:
+        return JsonResponse({'error':'No feed_id'}, status=400)
+
+    feed = Feed.objects.get(id=feed_id)
+    user = User.objects.filter(email=feed.email).first()
+    login_email = request.user.email
+
+    like_count = Like.objects.filter(feed_id=feed.id, is_like=True).count()  # 좋아요 총 개수
+    is_liked = Like.objects.filter(feed_id=feed.id, email=login_email, is_like=True).exists()  # 사용자의 좋아요 누름 여부
+    is_marked = Bookmark.objects.filter(feed_id=feed.id, email=login_email, is_marked=True).exists()
+
+    reply_object_list = Reply.objects.filter(feed_id=feed.id)
+    reply_list = []
+
+    for reply in reply_object_list:
+        reply_user = User.objects.filter(email=reply.email).first()
+        if reply_user:
+            reply_list.append(dict(nickname=reply_user.nickname, reply_content=reply.reply_content))
+
+
+    return JsonResponse({'image': '/media/' + feed.image,
+                         'nickname': user.nickname,
+                         'content': feed.content,
+                         'reply_list': reply_list,
+                         'is_liked': is_liked,
+                         'is_marked': is_marked,
+                         'like_count': like_count,})
 
 
 class UploadReply(APIView):
     def post(self, request):
         feed_id = request.data.get('feed_id', None)
-        email = request.session.get('email', None)
+        email = request.user.email
         reply_content = request.data.get('reply_content', None)
 
         Reply.objects.create(feed_id=feed_id, email=email, reply_content=reply_content)
@@ -149,12 +180,12 @@ class UploadReply(APIView):
 class ToggleLike(APIView):
     def post(self, request):
         feed_id = request.data.get('feed_id', None)                      # 좋아요 누른 피드
-        email = request.session.get('email', None)                       # 누른 사람
+        email = request.user.email                                       # 누른 사람
 
-        like, created = Like.objects.get_or_create(feed_id=feed_id, email=email, defaults={'is_liked':True})
+        like, created = Like.objects.get_or_create(feed_id=feed_id, email=email, defaults={'is_like':True})
 
         if not created:
-            like.is_liked = not like.is_liked
+            like.is_like = not like.is_like
             like.save()
 
         return Response(status=200)
@@ -163,7 +194,7 @@ class ToggleLike(APIView):
 class ToggleBookmark(APIView):
     def post(self, request):
         feed_id = request.data.get('feed_id', None)
-        email = request.session.get('email', None)
+        email = request.user.email
 
         bookmark, created = Bookmark.objects.get_or_create(feed_id=feed_id, email=email, defaults={'is_marked':True})
 
@@ -206,5 +237,4 @@ class ToggleFollow(APIView):
 
         # 결과
         return Response({"is_followed": follow.is_followed},status=200)
-
 

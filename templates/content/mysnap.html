@@ -37,7 +37,7 @@
         .modal_overlay {
             width: 100%;
             height: 100%;
-            position: absolute;
+            position: fixed;
             left: 0;
             top: 0;
             display: none;
@@ -111,7 +111,6 @@
                     <img src="{% static 'images/BOOKSNAP.png' %}" style="height:40px;">
                 </a>
 
-
                 <!-- 가운데 : 검색창 -->
                 <div class="mx-auto d-flex" style="width:300px; height: 25px">
                     <input class="form-control me-2" style="box-shadow: none" type="search" placeholder="Search"
@@ -124,7 +123,7 @@
                 <div class="d-flex gap-3 ms-auto">
                     <a href="/main" style="color: black"><span class="material-symbols-outlined">home</span></a>
                     <span class="material-symbols-outlined">send</span>
-                    <span id="nav_bar_add_box" class="material-symbols-outlined"  style="cursor: pointer">add_box</span>
+                    <span id="nav_bar_add_box" class="material-symbols-outlined" style="cursor: pointer">add_box</span>
                     <span class="material-symbols-outlined">explore</span>
                     <span class="material-symbols-outlined">mood_heart</span>
 
@@ -355,10 +354,8 @@
             <div id="feed_list" style="display: flex; flex-direction: row; flex-wrap: wrap; width: 60%; justify-content: flex-start">
                 {% for feed in feed_list %}
                     <div style="width: calc(33.33% - 10px); margin: 5px">
-                        <div>
-                            <img src="{% get_media_prefix %}{{ feed.image }}"
+                            <img class="feed_post" src="{% get_media_prefix %}{{ feed.image }}" data-feed-id="{{ feed.id }}"
                                  style="width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block">
-                        </div>
                     </div>
                 {% endfor %}
             </div>
@@ -367,10 +364,8 @@
             <div id="like_feed_list" style="display: none; flex-direction: row; flex-wrap: wrap; width: 60%; justify-content: flex-start">
                 {% for feed in like_feed_list %}
                     <div style="width: calc(33.33% - 10px); margin: 5px">
-                        <div>
                             <img class="profile" src="{% get_media_prefix %}{{ feed.image }}"
                                  style="width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block">
-                        </div>
                     </div>
                 {% endfor %}
             </div>
@@ -379,16 +374,14 @@
             <div id="bookmark_feed_list" style="display: none; flex-direction: row; flex-wrap: wrap; width: 60%; justify-content: flex-start">
                 {% for feed in bookmark_feed_list %}
                     <div style="width: calc(33.33% - 10px); margin: 5px">
-                        <div>
                             <img class="profile" src="{% get_media_prefix %}{{ feed.image }}"
                                  style="width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block">
-                        </div>
                     </div>
                 {% endfor %}
             </div>
         </div>
 
-        <!-- #1 Modal Layout(HTML) -->
+        <!-- #1 Modal Layout(add_box) -->
         <!-- 전체 검정 화면 -->
         <div id="first_modal" class="modal_overlay">
 
@@ -412,7 +405,7 @@
             </div>
         </div>
 
-        <!-- #2 Modal Layout(HTML) -->
+        <!-- #2 Modal Layout(add_box) -->
         <!-- 전체 검정 화면 -->
         <div id="second_modal" class="modal_overlay">
 
@@ -443,12 +436,12 @@
                         <!-- 프로필 -->
                         <div style="display: flex; flex-direction: row; align-items: center; margin: 10px">
                             <!-- 프로필 사진 -->
-                            <div class="box" style="height: 35px; width: 35px">
+                            <div class="box" style="height: 45px; width: 45px">
                                 <img class="profile" src="{% get_media_prefix %}{{ user.profile_image }}"
-                                     style="height:35px; width: 35px">
+                                     style="height:45px; width: 45px">
                             </div>
                             <!-- 아이디 -->
-                            <div style="margin-left: 10px; font-size: 12px">
+                            <div style="margin-left: 10px; font-size: 15px; font-weight: bold;">
                                 <b>{{ user.nickname }}</b>
                             </div>
                         </div>
@@ -456,7 +449,7 @@
                         <!-- 글쓰는 곳 -->
                         <div>
                             <textarea id="input_feed_content" class="form-control"
-                                      rows="3" style="width: 100%; height: 440px"></textarea>
+                                      rows="3" style="width: 100%; height: 425px"></textarea>
                         </div>
 
                         <!-- 버튼 -->
@@ -471,8 +464,97 @@
             </div>
         </div>
 
+        <!-- #3 Modal Layout(feed_post) -->
+        <!-- 전체 검정 화면 -->
+        <div id="feed_post_modal" class="modal_overlay">
+
+            <!-- 가운데 흰 화면 -->
+            <div class="modal_window">
+
+                <!-- 상단 바 -->
+                <span class="modal_close material-symbols-outlined"
+                           style="cursor: pointer; display: flex; justify-content:right; margin-right: 5px; margin-top: 10px">
+                    close
+                </span>
+
+                <!-- Image | Content | Reply -->
+                <div style="display: flex; flex-direction: row; border-top: solid 1px #dbdbdb; margin-top: 10px">
+
+                    <!-- Image -->
+                    <img id="modal_image" style="width :70%; height: 530px">
+
+                    <!-- Contents -->
+                    <div style="display: flex; flex-direction: column; border-left: solid 1px #dbdbdb; width: 30%;
+                        height: 530px;">
+
+                        <!-- 프로필 -->
+                        <div style="display: flex; flex-direction: row; align-items: center; margin: 10px; flex-shrink: 0;">
+                            <!-- 프로필 사진 -->
+                            <div class="box" style="height: 45px; width: 45px">
+                                <img class="profile" src="{% get_media_prefix %}{{ user.profile_image }}"
+                                     style="height: 45px; width: 45px">
+                            </div>
+                            <!-- 아이디 -->
+                            <div id="modal_nickname" style="margin-left: 10px; font-size: 15px; font-weight: bold"></div>
+                        </div>
+
+                        <!-- Content -->
+                        <div id="modal_content" style="margin-left: 10px; width: 100%; height: 150px; font-size: 15px;
+                            min-height: 80px; max-height: 250px; overflow-y: auto; flex-shrink: 0;">
+                        </div>
+
+                        <!-- Favorite | Bookmark -->
+                        <div style="display: flex; flex-direction: row; justify-content: space-between; margin: 5px;
+                            flex-shrink: 0; border-top: solid 1px #dbdbdb">
+
+                            <!-- Favorite -->
+                            <div style="display: flex; flex-direction: row; align-items: center">
+                                <span id="modal_is_liked" feed_id="{{ feed.id }}"
+                                      class="favorite material-symbols-outlined click-fill {% if feed.is_liked %}filled{% endif %}"
+                                      style="cursor: pointer; margin: 5px">
+                                favorite
+                                </span>
+
+                                <!-- Like Count -->
+                                <div id="modal_like_count" style="text-align: left; font-size: 17px;
+                                    font-weight: bold">
+                                </div>
+
+                            </div>
+
+                            <!-- Bookmark -->
+                            <span id="modal_is_marked" feed_id="{{ feed.id }}" style="cursor: pointer"
+                                  class="bookmark material-symbols-outlined click-fill {% if feed.is_marked %}filled{% endif %}"
+                                  style="cursor: pointer; margin: 5px">
+                            bookmark
+                            </span>
+                        </div>
+
+                        <!-- 댓글들 -->
+                        <div id="modal_reply_list" style="flex-grow: 1; padding: 15px; font-size: 14px; overflow-y: auto;"></div>
+
+
+                        <!-- 댓글 게시 버튼 -->
+                        <div style="display: flex; flex-direction: row; border-top: solid 1px #dbdbdb; align-items: center">
+                            <input id="reply_{{ feed.id }}" type="text" class="form-control" style="box-shadow: none;
+                                margin-top: 5px; margin-bottom: 5px; border: none" placeholder="댓글 달기...">
+                            <div class="upload_reply" feed_id="{{ feed.id }}" style="display: flex;
+                                justify-content: center; align-items: center; width: 40px; cursor: pointer">
+                                <span class="material-symbols-outlined click-fill" style="color: blue">send</span>
+                            </div>
+                        </div>
+
+
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
         <!-- Modal Action -->
         <script>
+        let files;
 
             // 모든 AJAX 요청에 CSRF 토큰을 자동으로 포함시키는 설정
             $.ajaxSetup({
@@ -546,20 +628,66 @@
                 $('#feed_list, #like_feed_list').hide();
             });
 
+            /* Open Modal(feed_post)*/
+            $('.feed_post').click(function (event){
+                let feed_id = $(this).data('feed-id');  // data-feed-id 값 가져오기
 
-            /* Close Modal */
-            $('.modal_close').click(function () {         // close 버튼 누르면
-                $('#first_modal').css({                   // first_modal 끄기
-                    display: 'none'
+                $.ajax({
+                    url: "/content/feed_detail",
+                    method: "GET",
+                    data: {feed_id: feed_id},
+
+                    success: function (data) {
+
+                        // 모달 내 요소에 데이터 넣기
+                        $('#modal_image').attr('src', data.image);   // HTML 속성 바꾸기
+                        $('#modal_content').text(data.content);      // 텍스트 넣기
+                        $('#modal_nickname').text(data.nickname);
+                        $('#modal_like_count').text(data.like_count);
+
+                        // Reply
+                        $('#modal_reply_list').empty;
+
+                        data.reply_list.forEach(function (reply) {
+                            let reply_row = `
+                                <div style="margin-bottom: 8px;">
+                                    <b style="margin-right: 5px;">${reply.nickname}</b>
+                                    <span>${reply.reply_content}</span>
+                                </div>`;
+                            $('#modal_reply_list').append(reply_row);
+                        });
+
+                        // Is Liked
+                        if (data.is_liked) {
+                            $('#modal_is_liked').addClass('filled');
+                        } else {
+                            $('#modal_is_like').removeClass('filled');
+                        }
+
+                        // Is Marked
+                        if (data.is_marked) {
+                            $('#modal_is_marked').addClass('filled');
+                        } else {
+                            $('#modal_is_marked').removeClass('filled');
+                        }
+
+                        // Modal
+                        $('#feed_post_modal').css({
+                            display: 'flex'
+                        });
+
+                        $(document.body).css({
+                            overflow: 'hidden'
+                        });
+                    },
+
+                    error: function (request, status, error) {
+                        console.log("에러");
+                    }
                 });
-                $('#second_modal').css({                  // second_modal 끄기
-                    display: 'none'
-                });
-            })
+            });
 
-            let files;
-
-            /* Open Modal*/
+            /* Open Modal(add_box) */
             $('#nav_bar_add_box').click(function () {   // nav_bar_add_box를 click하면 함수 실행
                 $('#first_modal').css({                // 그 함수는 first_modal의 css 속성 중
                     display: 'flex'                   // display 값을 flex로 변경함 (기본은 none)
@@ -568,6 +696,18 @@
                     overflow: 'hidden'                 // 스크롤 없애기
                 });
             });
+
+            /* Close Modal */
+            $('.modal_close').click(function () {
+                $('#first_modal, #second_modal, #feed_post_modal').css({
+                    display: 'none'
+                });
+
+                $(document.body).css({
+                    overflow: 'auto'
+                });
+            });
+
 
             /* Event 연결 */
             $('.img_upload_space')            // drog&drop html에 대하여
@@ -697,7 +837,7 @@
                     },
                     complete: function () {
                         console.log("완료");
-                        location.replace("/content/mysnap");              // mysnap 페이지로 이동
+                        location.replace("/content/mysnap/{{ request.user.nickname }}");              // mysnap 페이지로 이동
                     }
                 });
             }

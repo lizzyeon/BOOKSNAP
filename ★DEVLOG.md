@@ -11,7 +11,7 @@
 - 프로필 화면에서 팔로워 수를 클릭하면 해당 사용자의 팔로워 목록이 드롭다운 형태로 표시되도록 구현
 - for 조건문을 사용하여 모든 팔로우 유저 조회 `{% for r in followers %}`
 - 문제) 드롭다운에 팔로워 목록이 조회되지 않음<br>
-  <img src="static/d_images/2026-03-19-1.png" width="200" height="70">
+  <img src="static/d_images/2026-03-19-1.png" width="250" height="100">
 - 원인) `follower`와 `following`의 방향성을 혼동하여 잘못된 기준으로 데이터를 조회 함
 - 해결 1) 직관적인 이름으로 혼동 방지 : `from_user`(팔로우 하는 유저), `to_user`(팔로우 받는 유저)
 - 해결 2) 기존 email 기반 구조를 ForeignKey로 변경하여 User 모델과 직접 연결되도록 개선
@@ -68,17 +68,17 @@ to_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='follow
 <div style="display: flex; justify-content:left ; gap: 10px">
   <img src="static/d_images/2026-03-18-1.png" width="400" height="250">
   <img src="static/d_images/2026-03-18-2.png" width="400" height="250">
-</div>
+</div><br>
 
 2. 팔로우 버튼 클릭 → 팔로워 수 & 팔로잉 수 카운팅 | 본인 피드 팔로우 버튼 숨기기
 <div style="display: flex; justify-content: left; gap: 10px">
   <img src="static/d_images/2026-03-18-3.png" width="300">
   <img src="static/d_images/2026-03-18-4.png" width="300">
   <img src="static/d_images/2026-03-18-5.png" width="300">
-</div>
+</div><br>
 
 ### 👤 프로필 이동 기능(피드 → 다른 유저 프로필)
-- 피드에 표시된 프로필 이미지를 클릭하면 해당 유저의 프로필 페이지로 이동<br>
+- 피드에 표시된 프로필 이미지를 클릭하면 해당 유저의 프로필 페이지로 py이동<br>
 - 기존에는 `/content/mysnap`으로 로그인 유저 본인의 프로필 조회만 가능했었지만<br>
   URL에 `nickname`을 포함하도록 변경하여 다른 유저 프로필도 조회 가능하도록 개선
   - url : `path('mysnap/<str:nickname>/', MySnap.as_view(), name='mysnap')`
