@@ -1,5 +1,42 @@
 # 📒 BOOKSNAP Development Log
 
+## 2026-03-20
+
+### 1. 게시물 클릭 시 모달 화면 구현
+<img src="static/d_images/2026-03-20-3.png" width="400" height="300"><br>
+
+- HTML(클릭) → JS(AJAX 요청) → Django View(데이터 조회) → JSON 응답 → JS → 모달 표시
+  - HTML: `<img class="feed_post" data-feed-id="3">`
+  - JS : `$('.feed_post').click(function () {`
+  - 서버 요청 `$.ajax({url: "/content/feed_detail", method: "GET", data: {feed_id: feed_id} {) `
+  - View : `def feed_detail(request):`
+  - DB : `feed = Feed.objects.get(id=feed_id)`
+  - JSON : `return JsonResponse({'image': feed.image.url, 'content': feed.content, 'nickname': feed.user.nickname })`
+  - 모달 : `$('#modal_image').attr('src', data.image);`
+  ```
+  <img class="feed_post"
+       src="{% get_media_prefix %}{{ feed.image }}"
+       data-feed-id="{{ feed.id }}">  # data-feed-id 추가
+  ```
+- 개선 점
+  - 새로고침을 하지 않고 게시물을 누르면 댓글이 계속 누적되는 것
+  - 해당 게시물의 댓글 가져오는 것
+  - Main과 Mysnap 댓글 모두, 닉네임 옆에 프로필 이미지 추가
+  - Mysnap의 좋아요, 북마크 기능 구현
+
+### 2. Modal 창
+<div style="display: flex; justify-content:left ; gap: 10px">
+  <img src="static/d_images/2026-03-20-1.png" width="400" height="300">
+  <img src="static/d_images/2026-03-20-2.png" width="400" height="300">
+</div><br>
+
+- 문제) Main 화면에서 스크롤을 내린 상태로 `add_box` 버튼을 누르면 Modal 창이 위쪽에 붙여있는 모양으로 열림
+- 원인) .modal_overlay {position : absolute}
+- 해결) posision : fixed로 변경
+<br><br><br><br>
+
+---
+
 ## 2026-03-19
 팔로워 / 팔로잉 리스트 드롭다운
 <div style="display: flex; justify-content:left ; gap: 10px">
