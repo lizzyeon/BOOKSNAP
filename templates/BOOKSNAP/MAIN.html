@@ -9,6 +9,9 @@
         <!-- Bootstrap CSS -->
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
+        <!-- Google Font -->
+        <link href="https://fonts.googleapis.com/css2?family=IBM_Plex_Sans_KR&display=swap" rel="stylesheet">
+
         <!-- Google Icons -->
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
@@ -18,6 +21,11 @@
         <title>독서기록장</title>
 
         <style>
+
+            body {
+                font-family: 'IBM_Plex_Sans_KR', Iosevka Charon;
+            }
+
             .box {
                 width: 150px;
                 height: 150px;
@@ -167,14 +175,14 @@
 
                         <!-- 프로필 사진 -->
                         <a href="/content/mysnap/{{ feed.nickname }}">
-                            <div class="box" style="height: 60px; width: 60px">
+                            <div class="box" style="height: 55px; width: 55px">
                                 <img class="profile" src="{% get_media_prefix %}{{ feed.profile_image }}"
-                                     style="height:60px; width: 60px; cursor: pointer">
+                                     style="height:55px; width: 55px; cursor: pointer">
                             </div>
                         </a>
 
                         <!-- 아이디 -->
-                        <div style="margin-left: 10px; padding-right: 10px; font-size: 21px">
+                        <div style="margin-left: 13px; padding-right: 10px; font-size: 18px">
                             <b>{{ feed.nickname }}</b>
                         </div>
 
@@ -202,7 +210,7 @@
                         </span>
                     </div>
 
-                    <!-- 좋아요 -->
+                    <!-- 좋아요 수-->
                     <div style="text-align: left; font-size: 14px; margin: 0 10px">
                         <b>{{ feed.like_count }}명</b>이 좋아합니다
                     </div>
