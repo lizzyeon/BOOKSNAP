@@ -103,13 +103,14 @@
 
                 /* 서버로 보내기 */
                 $.ajax({                                 // AJAX(비동기)로 브라우저 → Django 서버로 데이터 전달
-                    data: {
+                    data: JSON.stringify({
                         email : email,
                         password : password
-                    },
+                    }),
                     method: "POST",
                     url: "/user/login",
 
+                    contentType: "application/json",
                     headers: {
                         'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
                     },
