@@ -113,6 +113,8 @@ TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
+USE_L10N = True
+
 USE_TZ = True
 
 
@@ -120,11 +122,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = '/static/'
-import os
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-]
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # mysite/settings.py
 
@@ -137,5 +136,3 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # 커스텀 유저 모델 사용
 AUTH_USER_MODEL = 'user.User'
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
