@@ -1,5 +1,53 @@
 # 📒 BOOKSNAP Development Log
 
+## 2026-03-24
+<div style="display: flex; justify-content:left ; gap: 10px">
+  <img src="static/d_images/2026-03-24-2.png" width="200" height="300">
+  <img src="static/d_images/2026-03-24-3.png" width="400" height="300">
+</div><br>
+
+### 🚀 EC2를 활용한 BOOKSNAP 배포
+- 로컬 환경(127.0.0.1)에서만 동작하던 Django 프로젝트를 AWS EC2에 배포하여 외부에서도 접속 가능하도록 구현
+- GitHub에 업로드한 프로젝트를 활용하여, EC2에서 clone 및 pull을 통해 동일한 코드 환경 구성
+- `python3 manage.py runserver 0.0.0.0:8000`로 서버 실행 후 퍼블릭 IP를 통해 접속 확인
+- 배포 과정에서 발생한 중 문제와 해결 과정은 다음과 같음
+
+### 문제 1. 퍼블릭 ip로 접속 불가
+- EC2에서 서버는 실행되었지만 외부 접속이 되지 않는 문제 발생
+- 원인) Django 및 AWS 네트워크 설정 미흡
+- 해결 1) `ALLOWED_HOSTS = ['*']` 설정을 통해 외부 ip 접근 허용
+- 해결 2) EC2 보안 그룹에서 8000 포트 개방하여 외부 요청 허용
+
+### 문제 2. URL 경로 중첩 문제
+<div style="display: flex; justify-content:left ; gap: 10px">
+  <img src="static/d_images/2026-03-24-4.png" width="200" height="300">
+  <img src="static/d_images/2026-03-24-5.png" width="200" height="300">
+</div><br>
+- 로그인 화면(`/user/login`)에서 '가입하기' 클릭 시 `/user/login/user/join` 형태로 잘못된 URL 생성
+- 원인) 상대경로(`user/login`, `user/join`) 사용으로 현재 URL 뒤에 이어붙는 문제 발생
+- 해결) 절대경로(`/user/login/`, `/user/join/`)로 수정하여 올바른 라우팅 처리
+
+
+### 문제 3. 로고 등 이미지 미출력
+<div style="display: flex; justify-content:left ; gap: 10px">
+  <img src="static/d_images/2026-03-24-1.png" width="200" height="300">
+  <img src="static/d_images/2026-03-24-6.png" width="450" height="300">
+</div><br>
+
+- 페이지는 정상 렌더링되지만 이미지가 표시되지 않는 문제 발생
+- 원인) static 경로 설정 문제 또는 서버 환경에서의 경로 인식 차이
+- 해결) {% static %} 대신 실제 이미지 URL을 직접 삽입하여 해결
+  - 캐시 삭제 이후 다른 static 이미지는 제대로 출력되는 걸 보니 단순 캐시 문제였을수도,,
+
+📌 **배운 점**
+- Django는 URL, 인증, 요청 방식 등에 있어 서버 환경에서 더 엄격하게 동작함
+  - 특히 URL 뒤의 `/`의 중요성(절대경로)을 체감
+- Git을 활용하면 특정 시점으로 쉽게 되돌릴 수 있어, 문제 해결 과정에서 매우 유용함을 체감
+- 브라우저 캐시로 인해 변경 사항이 반영되지 않는 경우가 있으며, 이럴 때는 캐시 삭제가 효과적임
+<br><br><br><br>
+
+---
+
 ## 2026-03-20
 
 ### 1. 게시물 클릭 시 모달 화면 구현
@@ -23,6 +71,7 @@
   - 해당 게시물의 댓글 가져오는 것
   - Main과 Mysnap 댓글 모두, 닉네임 옆에 프로필 이미지 추가
   - Mysnap의 좋아요, 북마크 기능 구현
+
 
 ### 2. Modal 창
 <div style="display: flex; justify-content:left ; gap: 10px">
