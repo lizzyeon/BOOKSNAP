@@ -26,7 +26,10 @@ SECRET_KEY = 'django-insecure-4@p1i2zby!tuu*ti+=s=12##v^au7x-b)x%6exb76t*_+5%w(#
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    'booksnap.duckdns.org',
+    '3.26.24.175'
+]
 
 
 # Application definition
@@ -79,11 +82,15 @@ WSGI_APPLICATION = 'BOOKSNAP.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'booksnap_devops',
+        'USER': 'root',
+        'PASSWORD': 'password',
+        'HOST': '3.26.24.175',
+        'PORT': '3306',
+        'OPTIONS': {'charset': 'utf8mb4'}
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
