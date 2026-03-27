@@ -1,5 +1,134 @@
 # 📒 BOOKSNAP Development Log
 
+## 2026-03-26
+
+### 🚀 Nginx + uWSGI + Django 배포 환경 구축
+
+### 1. 아키텍처 : Nginx → uWSGI → Django
+기존의 Django `runserver`는 개발용 서버로 성능과 안정성에 한계가 있음<br>
+이를 보완하기 위해 `Nginx -uWSGI - Django` 구조로 분리하여 구성<br>
+이 구조를 통해 요청 처리 역할을 나누고, 성능과 안정성을 개선함
+- **Nginx (Web Server)** : 사용자의 요청을 가장 먼저 받는 진입점
+  - 정적 파일(CSS, JS, 이미지)은 직접 처리하여 빠르게 응답
+  - 동적 요청(로그인 처리, DB 조회 등)은 uWSGI로 전달하여 Django에서 처리하도록 분리
+- **uWSGI (Web Application Server)** : Nginx와 Django 사이의 인터페이스 역할
+  - Nginx로부터 받은 요청을 Django가 처리할 수 있는 형태로 전달
+  - Django의 처리 결과를 다시 Nginx로 반환
+- **Django (Web Framework)** : 실제 애플리케이션 로직 처리
+  - 데이터베이스 조회, 사용자 인증, 게시글 처리 등 비즈니스 로직 수행
+
+### 2. Apache vs Nginx (Nginx 선택)
+
+| 구분 | Apache | Nginx  |
+| ---- | ------ | ------ |
+| 구조 | 프로세스/쓰레드 기반<br>(요청 1개마다 프로세스 또는 쓰레드 생성 → 동시 요청 증가 시 자원 사용 급증) | 이벤트 루프 기반<br>(소수의 프로세스로 다수의 요청을 이벤트로 처리 → 높은 동시성 유지)  |
+| 특징 | 요청마다 독립적으로 처리하여 안정적이지만, 요청이 많아질수록 메모리와 CPU 사용량이 크게 증가  | 요청을 비동기적으로 처리하여 적은 자원으로도 대량의 동시 요청 처리 가능|
+| 강점 | 다양한 모듈 지원 및 유연한 설정| 정적 파일 처리 속도가 빠르고, reverse proxy로서 효율적인 요청 분배 가능 |
+
+💡 **Nignx 선택 이유**<br>
+Apache는 요청마다 프로세스를 생성하는 구조로 동시 접속이 많아질수록 자원 소모가 증가하는 반면, Nginx는 이벤트 기반 비동기 구조로 적은 자원으로도 많은 요청을 효율적으로 처리할 수 있음. 특히 정적 파일 처리 성능이 뛰어나고 메모리 사용량이 적어, EC2와 같은 제한된 환경에서 더 적합함
+
+### 3. Unix Socket vs TCP (Unix Socket 선택)
+Nginx와 uWSGI 간 통신 방식
+| 구분  | TCP                      | Unix Socket            |
+| ----- | ------------------------ | ---------------------- |
+| 방식| 네트워크 기반 (IP + Port)<br> `127.0.0.1:8000`| 파일(`uwsgi.sock`) 기반<br>`/home/ubuntu/uwsgi.sock`|
+| 처리 구조 | 네트워크 스택을 거쳐 전달 → 오버헤드 존재 | 파일로 직접 전달 → 오버헤드 거의 없음 |
+| 속도    | 상대적으로 느림 | 더 빠름(불필요한 과정 없음)|
+| 사용 환경 | 서버 간 통신 가능 | 동일 서버 내부 통신  |
+
+💡 **선택 이유**<br>
+동일 서버 내 통신에서는 네트워크 스택을 거치지 않는 Unix Socket이 더 빠르고 효율적이며, 파일 권한 기반으로 접근을 제어할 수 있어 보안 측면에서도 유리
+
+### 4. uWSGI 설정 파일 (uwsgi.ini)
+명령어 실행 대신 설정 파일 기반으로 uWSGI를 관리하도록 구성
+```ini
+[uwsgi]
+# 프로젝트 경로 및 파이썬 가상환경 설정
+chdir = /home/ubuntu/BOOKSNAP
+module = BOOKSNAP.wsgi
+home = /home/ubuntu/BOOKSNAP/venv
+
+# Nginx와 통신할 소켓 설정
+socket = /home/ubuntu/uwsgi.sock
+chmod-socket = 666                      # socket 접근 권한 설정
+vacuum = true                           # uWSGI 종료 시 socket 파일 자동 삭제 
+
+# 프로세스 및 스레드 설정 (동시 요청 처리)
+master = true
+processes = 2
+threads = 2
+
+# 로그 설정 
+logto = /home/ubuntu/uwsgi.log         # 로그 파일 저장 위치
+
+;daemonize = /home/ubuntu/uwsgi.log    # 주석처리??????????????????????????/
+```
+- uWSGI는 systemd를 통해 서비스로 등록하여, 서버 재시작 이후에도 자동으로 실행되도록 구성하였다.
+
+### 5. EC2 보안 설정 (HTTP 80 포트 개방)
+- 기존에는 개발용 포트(8000)를 사용했지만, 실제 서비스 환경에서는 기본 HTTP 포트인 **80번 포트**를 사용
+- 이를 위해 AWS Security Group에서 **80번 포트**를 허용하여 외부에서 HTTP 요청이 들어올 수 있도록 설정 
+- 이후 Nginx가 해당 포트를 통해 들어오는 요청을 받아 처리하도록 구성
+
+### 6. Nginx 설정 (default 제거 및 재구성)
+기존 default 설정을 제거하고, uWSGI와 직접 연결되는 구조로 재작성
+특히 80번 포트를 통해 들어온 요청을 uWSGI의 Unix Socket으로 전달하도록 설정
+```nginx
+server {
+    listen 80;                                       # HTTP 기본 포트로 외부 요청 수신
+    server_name 3.26.24.175;                         # EC2 고정 IP
+
+    charset utf-8;
+    client_max_body_size 80M;                        
+
+    location / {
+        include /etc/nginx/uwsgi_params;
+        uwsgi_pass unix:/home/ubuntu/uwsgi.sock;     # uWSGI 소켓으로 요청 전달
+    }
+}
+```
+<br>
+
+### 502 Bad Gateway 에러 발생
+마지막 단계에서 Nginx와 uWSGI 간 연결 실패로 인한 **502 Bad Gateway** 발생
+
+#### 원인 1. 소켓 접근 권한 문제
+Nginx와 uWSGI가 통신하기 위해서는 `uwsgi.sock` 파일에 대한 상호 접근 권한이 필수
+- 파일 자체의 권한(`chmod 666`)
+  - `Nginx는 `www-data' 유저로 실행되고, uWSGI는 `ubuntu` 유저로 실행됨. 소유 유저가 서로 다르기 때문에 Nginx가 소켓 파일을 읽거나 쓸 수 없는 권한 문제 발생
+  - 해결) 외부 프로세스인 Nginx가 접근할 수 있도록 소켓 파일 권한을 666으로 개방하여 유저 간 통신 장벽 제거 
+- 디렉토리 실행 권한(`chmod 755 /home/ubuntu`)
+  - 파일 권한이 있더라도, 소켓 파일이 들어있는 폴더(`/home/ubuntu`)에 접근 권한이 없으면 파일의 위치를 찾을 수 없음
+  - 해결) `/home/ubuntu` 디렉토리 권한을 `755`로 수정하여 Nginx(`www-data`) 유저가 접근할 수 있도록 경로 확보
+```bash
+sudo chmod 755 /home/ubuntu
+sudo chmod 666 /home/ubuntu/uwsgi.sock
+```
+
+#### 원인 2. uWSGI 실행 방식과 systemd 충돌
+`daemonize`(uWSGI를 백그라운드에서 직접 실행하는 방식)와 `systemd`(OS 레빌의 서비스 관리 도구) 간의 관리 주체 충돌 발생
+- `daemonize` 옵션의 오용
+  - `uwsgi.ini`의 `daemonize` 옵션(#5)은 프로세스를 스스로 백그라운드(데몬)로 전환하는 반면, `systemd`는 자신이 직접 프로세스를 추적하고 관리해야 함
+  - uWSGI가 스스로 데몬화되어 숨어버리자, 이를 감시하던 `systemd`는 프로세스가 종료된 것으로 오판하여 서비스를 중단시키는 무한 재시작 루프에 빠짐
+  - 해결) `uwsgi.ini`에서 `daemonize` 옵션을 제거하고, `systemd` 설정(`uwsgi.service`)의 타입을 `Type=simple`로 지정. OS가 직접 uWSGI의 생명주기를 관리하도록 구조 개선
+<br>
+
+### 📌 최종 결과
+- Nginx → uWSGI → Django 구조 구축 완료
+- 80번 포트를 통한 외부 접속 가능
+- PuTTY 종료 후에도 서버 지속 실행
+<br>
+
+📌 **배운 점**
+- 웹 서버와 애플리케이션 서버를 분리하는 구조의 중요성 이해
+- 정적/동적 요청 분리를 통한 성능 개선 경험
+- 작은 설정 오류 하나가 전체 시스템에 영향을 준다는 점 체감
+- 특히 **502 에러는 대부분 uWSGI 연결 문제**라는 점을 실전에서 학습
+<br><br><br><br>
+
+---
+
 ## 2026-03-24
 <div style="display: flex; justify-content:left ; gap: 10px">
   <img src="static/d_images/2026-03-24-2.png" width="200" height="300">
@@ -23,6 +152,7 @@
   <img src="static/d_images/2026-03-24-4.png" width="200" height="300">
   <img src="static/d_images/2026-03-24-5.png" width="200" height="300">
 </div><br>
+
 - 로그인 화면(`/user/login`)에서 '가입하기' 클릭 시 `/user/login/user/join` 형태로 잘못된 URL 생성
 - 원인) 상대경로(`user/login`, `user/join`) 사용으로 현재 URL 뒤에 이어붙는 문제 발생
 - 해결) 절대경로(`/user/login/`, `/user/join/`)로 수정하여 올바른 라우팅 처리
