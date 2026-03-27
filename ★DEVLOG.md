@@ -1,6 +1,7 @@
 # 📒 BOOKSNAP Development Log
 
 ## 2026-03-26
+<img src="static/d_images/2026-03-25-3.png" width="250" height="300">
 
 ### 🚀 Nginx + uWSGI + Django 배포 환경 구축
 
@@ -28,11 +29,20 @@
 💡 **Nignx 선택 이유**<br>
 Apache는 요청마다 프로세스를 생성하는 구조로 동시 접속이 많아질수록 자원 소모가 증가하는 반면, Nginx는 이벤트 기반 비동기 구조로 적은 자원으로도 많은 요청을 효율적으로 처리할 수 있음. 특히 정적 파일 처리 성능이 뛰어나고 메모리 사용량이 적어, EC2와 같은 제한된 환경에서 더 적합함
 
-### 3. Unix Socket vs TCP (Unix Socket 선택)
+### 3. EC2 보안 설정 (HTTP 80 포트 개방)
+- 기존에는 개발용 포트(8000)를 사용했지만, 실제 서비스 환경에서는 기본 HTTP 포트인 **80번 포트**를 사용
+- 이를 위해 AWS Security Group에서 **80번 포트**를 허용하여 외부에서 HTTP 요청이 들어올 수 있도록 설정 
+- 이후 Nginx가 해당 포트를 통해 들어오는 요청을 받아 처리하도록 구성<br>
+
+  <img src="static/d_images/2026-03-25-1.png" width="400" height="200"><br>
+  외부 요청이 EC2 인스턴트를 거쳐 Nginx까지 정상적으로 도달했음 의미 
+
+### 4. Unix Socket vs TCP (Unix Socket 선택)
 Nginx와 uWSGI 간 통신 방식
+
 | 구분  | TCP                      | Unix Socket            |
 | ----- | ------------------------ | ---------------------- |
-| 방식| 네트워크 기반 (IP + Port)<br> `127.0.0.1:8000`| 파일(`uwsgi.sock`) 기반<br>`/home/ubuntu/uwsgi.sock`|
+| 방식| 네트워크 기반 (IP + Port)<br> `127.0.0.1:8000` | 파일(`uwsgi.sock`) 기반<br>`/home/ubuntu/uwsgi.sock` |
 | 처리 구조 | 네트워크 스택을 거쳐 전달 → 오버헤드 존재 | 파일로 직접 전달 → 오버헤드 거의 없음 |
 | 속도    | 상대적으로 느림 | 더 빠름(불필요한 과정 없음)|
 | 사용 환경 | 서버 간 통신 가능 | 동일 서버 내부 통신  |
@@ -40,7 +50,7 @@ Nginx와 uWSGI 간 통신 방식
 💡 **선택 이유**<br>
 동일 서버 내 통신에서는 네트워크 스택을 거치지 않는 Unix Socket이 더 빠르고 효율적이며, 파일 권한 기반으로 접근을 제어할 수 있어 보안 측면에서도 유리
 
-### 4. uWSGI 설정 파일 (uwsgi.ini)
+### 5. uWSGI 설정 파일 (uwsgi.ini)
 명령어 실행 대신 설정 파일 기반으로 uWSGI를 관리하도록 구성
 ```ini
 [uwsgi]
@@ -62,14 +72,9 @@ threads = 2
 # 로그 설정 
 logto = /home/ubuntu/uwsgi.log         # 로그 파일 저장 위치
 
-;daemonize = /home/ubuntu/uwsgi.log    # 주석처리??????????????????????????/
+;daemonize = /home/ubuntu/uwsgi.log    # systemd와 충돌 방지 위해 주석 처리
 ```
 - uWSGI는 systemd를 통해 서비스로 등록하여, 서버 재시작 이후에도 자동으로 실행되도록 구성하였다.
-
-### 5. EC2 보안 설정 (HTTP 80 포트 개방)
-- 기존에는 개발용 포트(8000)를 사용했지만, 실제 서비스 환경에서는 기본 HTTP 포트인 **80번 포트**를 사용
-- 이를 위해 AWS Security Group에서 **80번 포트**를 허용하여 외부에서 HTTP 요청이 들어올 수 있도록 설정 
-- 이후 Nginx가 해당 포트를 통해 들어오는 요청을 받아 처리하도록 구성
 
 ### 6. Nginx 설정 (default 제거 및 재구성)
 기존 default 설정을 제거하고, uWSGI와 직접 연결되는 구조로 재작성
@@ -91,6 +96,8 @@ server {
 <br>
 
 ### 502 Bad Gateway 에러 발생
+<img src="static/d_images/2026-03-25-2.png" width="350" height="150">
+
 마지막 단계에서 Nginx와 uWSGI 간 연결 실패로 인한 **502 Bad Gateway** 발생
 
 #### 원인 1. 소켓 접근 권한 문제
