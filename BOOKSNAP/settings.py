@@ -84,7 +84,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'booksnap_devops',
-        'USER': 'root',
+        'USER': 'admin',
         'PASSWORD': 'password',
         'HOST': 'db-booksnap-devops.czyskiuc2m17.ap-northeast-2.rds.amazonaws.com',
         'PORT': '3306',
