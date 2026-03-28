@@ -86,7 +86,7 @@ DATABASES = {
         'NAME': 'booksnap_devops',
         'USER': 'root',
         'PASSWORD': 'password',
-        'HOST': '3.26.24.175',
+        'HOST': 'db-booksnap-devops.czyskiuc2m17.ap-northeast-2.rds.amazonaws.com',
         'PORT': '3306',
         'OPTIONS': {'charset': 'utf8mb4'}
     }
