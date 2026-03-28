@@ -1,10 +1,91 @@
 # 📒 BOOKSNAP Development Log
 
-## 2026-03-27
+## 2026-03-28
 
 사용자가 브라우저에 URL을 입력하면, 먼저 DNS를 통해 도메인을 IP 주소로 변환합니다.
 이후 브라우저는 해당 서버에 HTTP 요청을 보내고, 서버는 요청을 처리한 뒤 HTML, CSS, JavaScript 파일을 응답합니다.
 브라우저는 이 데이터를 받아 렌더링 과정을 거쳐 화면에 웹 페이지를 표시합니다.
+
+### 🦤 DuckDNS를 활용한 도메인 연결
+<img src="static/d_images/2026-03-27-1.png" width="350" height="200">
+
+- 기존) EC2 Public IP(3.26.24.175) 사용 : 기억하기 어렵고, IP 변경 시 재설정 필요
+- 변경) DuckDNS를 활용하여 `booksnap.duckdns.org` 도메인 생성 후 EC2 IP와 연결
+  - Django 설정에 `ALLOWED_HOSTS = ['booksnap.duckdns.org']` 추가
+  - Nginx 설정에서 `server_name booksnap.duckdns.org;`로 변경
+<br><br>
+
+### 💼 Django DB 환경 전환 (SQLite → Docker MySQL → AWS RDS)
+- SQLite는 파일 기반 DB로 간편하지만, 동시성 처리 및 확장성 측면에서 한계 존재
+- 실제 서비스 환경을 고려하여 MySQL 기반 구조로 전환 시도<br>
+<div style="display: flex; justify-content:left; flex-direction: column; gap: 10px">
+  <img src="static/d_images/2026-03-27-2.png" width="250" height="350">
+  <img src="static/d_images/2026-03-27-3.png" width="800" height="50">
+</div>
+
+<br><br>
+
+### 🐳 방법 1. Docker 기반 MySQL 연동
+- Docker로 MySQL 실행
+  - 서버에 직접 MySQL을 설치하는 대신, 환경 분리 및 관리 편의성을 위해 docker 활용
+```
+sudo docker run --name booksnap-db -p 3306:3306 
+-e MYSQL_ROOT_PASSWORD=password \
+-e MYSQL_PASSWORD=password mysql
+```
+- 보안 그룹 설정 : EC2 인바운드 규칙에 3306(MySQL) 포트 추가
+- DataGrip에서 MySQL 연결 (EC2 IP + 3306 포트 → DB 생성 `booksnap_devops`)
+- Django DB 설정 변경 (SQLite → MySQL)
+```
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'booksnap_devops',
+        'HOST': '3.26.24.175',
+    }
+}
+```
+- 마이그레이션 `python3 manage.py migrate`<br>
+    👉 DataGrip에서 테이블 생성 확인
+<br><br>
+
+### ☁️ 방법2. AWS RDS로 MySQL 연동
+- RDS MySQL 인스턴스 생성
+  - VPC 보안 그룹: db-booksnap-devops
+- 보안 그룹 설정 : EC2 → RDS 보안 그룹 설정
+  - RDS 보안 그룹에서 MySQL(3306) 포트를 허용하고, 소스를 EC2로 제한하여 외부 접근을 차단하고 서버에서만 DB 접근이 가능하도록 설정
+- DataGrip에서 RDS 연결 (RDS endpoint + 3306 포트 → DB 설정)
+- Django DB 설정 변경 (RDS 기준)
+```
+DATABASES = {
+  'default': {
+      'ENGINE': 'django.db.backends.mysql',
+      'NAME': 'booksnap_devops',
+      'HOST': 'db-booksnap-devops.czyskiuc2m17.ap-northeast-2.rds.amazonaws.com',
+  }
+}
+```  
+- 마이그레이션 `python3 manage.py migrate`<br>
+    👉 RDS에 테이블 생성 확인
+<br><br>
+
+### 🔐 환경변수로 시크릿 정보 분리
+DB 계정, 비밀번호 등 민감 정보를 코드에서 분리하여 관리하고자 함
+<div style="display: flex; justify-content:left; flex-direction: column; gap: 10px">
+    <img src="static/d_images/2026-03-27-5.png" width="520" height="280"> 
+    <img src="static/d_images/2026-03-27-4.png" width="510" height="200">
+</div>
+<br><br>
+
+📌 **배운 점**
+- 웹 동작 흐름 이해
+  - (사용자) 브라우저에 URL을 입력 → (DNS) 도메인이 IP 주소로 변환 → (브라우저) 서버에 HTTP 요청 
+    → (서버) 해당 요청을 처리하여 HTML, CSS, JS 응답 → (브라우저) 렌더링하여 화면에 표시
+- DB 구조 분리를 통한 서비스 구조  
+  - EC2 내부 DB(Docker)와 외부 DB(RDS)를 비교하며, 서비스와 데이터베이스를 분리하는 구조의 안정성과 확장성 이해
+- 환경변수 기반 설정 관리 필요성  
+  - DB 계정 및 비밀번호와 같은 민감 정보를 코드에서 분리하고, 환경변수를 통해 관리하는 방식의 필요성과 실행 방법 이해 
+<br><br><br><br>
 
 ---
 
