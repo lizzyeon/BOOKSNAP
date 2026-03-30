@@ -1,15 +1,37 @@
 # 📒 BOOKSNAP Development Log
 
-## 2026-03-29
+## 2026-03-30
+
+### 🛠️ 개발 환경 설정
+- MySQL(RDS) 기반 설정을 로컬 환경에서도 그대로 사용할 경우, `mysqlclient` 설치 문제로 인해 `runserver` 실행이 불가능한 상황 발생
+- 이를 해결하기 위해 `local_settings.py`를 추가하고 `try-except` 구문을 활용하여 환경에 따라 DB 설정을 자동으로 전환하도록 구조 개선
+- 로컬 환경에서는 SQLite를 사용하여 빠르게 개발 및 테스트를 진행하고,
+  배포 환경에서는 `local_settings.py`가 존재하지 않기 때문에 기본 설정(RDS)이 적용되도록 구성
+  - 로컬 환경(`local_settings.py`)
+  ```
+  DATABASES = {
+      'default': {
+          'ENGINE': 'django.db.backends.sqlite3',
+          'NAME': BASE_DIR / 'db.sqlite3',
+      }
+  }
+  DEBUG = True
+  ```
+  - 공통 환경(`settings.py`)
+  ```
+  try:
+      from .local_settings import * 
+  except ImportError:
+      pass 
+  ```
+
+📌 **배운 점**
+- 동일한 코드베이스에서 환경에 따라 설정을 다르게 적용하는 방법과 필요성 이해
+<br><br><br><br>
 
 ---
 
 ## 2026-03-28
-
-사용자가 브라우저에 URL을 입력하면, 먼저 DNS를 통해 도메인을 IP 주소로 변환합니다.
-이후 브라우저는 해당 서버에 HTTP 요청을 보내고, 서버는 요청을 처리한 뒤 HTML, CSS, JavaScript 파일을 응답합니다.
-브라우저는 이 데이터를 받아 렌더링 과정을 거쳐 화면에 웹 페이지를 표시합니다.
-<br><br>
 
 ### 🦤 DuckDNS를 활용한 도메인 연결
 <img src="static/d_images/2026-03-27-1.png" width="350" height="200">
