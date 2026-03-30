@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import sys
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -80,6 +81,7 @@ WSGI_APPLICATION = 'BOOKSNAP.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+# 서버용 MySQL
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -91,6 +93,12 @@ DATABASES = {
         'OPTIONS': {'charset': 'utf8mb4'}
     }
 }
+
+# 로컬 개발 환경용 SQLite
+try:
+    from .local_settings import *      # SQLite 있으면 가져오고
+except ImportError:                    # 없으면 MySQL 유지
+    pass
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
