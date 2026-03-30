@@ -1,10 +1,15 @@
 # 📒 BOOKSNAP Development Log
 
+## 2026-03-29
+
+---
+
 ## 2026-03-28
 
 사용자가 브라우저에 URL을 입력하면, 먼저 DNS를 통해 도메인을 IP 주소로 변환합니다.
 이후 브라우저는 해당 서버에 HTTP 요청을 보내고, 서버는 요청을 처리한 뒤 HTML, CSS, JavaScript 파일을 응답합니다.
 브라우저는 이 데이터를 받아 렌더링 과정을 거쳐 화면에 웹 페이지를 표시합니다.
+<br><br>
 
 ### 🦤 DuckDNS를 활용한 도메인 연결
 <img src="static/d_images/2026-03-27-1.png" width="350" height="200">
@@ -18,9 +23,9 @@
 ### 💼 Django DB 환경 전환 (SQLite → Docker MySQL → AWS RDS)
 - SQLite는 파일 기반 DB로 간편하지만, 동시성 처리 및 확장성 측면에서 한계 존재
 - 실제 서비스 환경을 고려하여 MySQL 기반 구조로 전환 시도<br>
-<div style="display: flex; justify-content:left; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content:left; gap: 10px">
   <img src="static/d_images/2026-03-27-2.png" width="250" height="350">
-  <img src="static/d_images/2026-03-27-3.png" width="800" height="50">
+  <img src="static/d_images/2026-03-27-3.png" width="800" height="350">
 </div>
 
 <br><br>
@@ -81,10 +86,17 @@ DB 계정, 비밀번호 등 민감 정보를 코드에서 분리하여 관리하
 - 웹 동작 흐름 이해
   - (사용자) 브라우저에 URL을 입력 → (DNS) 도메인이 IP 주소로 변환 → (브라우저) 서버에 HTTP 요청 
     → (서버) 해당 요청을 처리하여 HTML, CSS, JS 응답 → (브라우저) 렌더링하여 화면에 표시
-- DB 구조 분리를 통한 서비스 구조  
-  - EC2 내부 DB(Docker)와 외부 DB(RDS)를 비교하며, 서비스와 데이터베이스를 분리하는 구조의 안정성과 확장성 이해
 - 환경변수 기반 설정 관리 필요성  
   - DB 계정 및 비밀번호와 같은 민감 정보를 코드에서 분리하고, 환경변수를 통해 관리하는 방식의 필요성과 실행 방법 이해 
+  - DB 구조 분리를 통한 서비스 구조  
+    - EC2 내부 DB(Docker)와 외부 DB(RDS)를 비교하며, 서비스와 데이터베이스를 분리하는 구조의 안정성과 확장성 이해
+
+    | 구분    | 🐳 Docker MySQL (방법 1)              | ☁️ AWS RDS (방법 2)             |
+    | ----- |-------------------------------------|-------------------------------|
+    | DB 위치 | EC2 내부<br>→ 서버 + DB가 한 곳에 존재        | AWS 별도 서버<br>→ 서버와 DB가 분리된 구조 |
+    | 안정성   | 서버 장애 시 DB도 영향 받음                   | DB는 독립적으로 유지                  |
+    | 확장성   | 제한적 (서버 성능 의존)                      | 수평/수직 확장 가능                   |
+    | 특징    | 빠르게 구축 가능하고 비용 부담이 없으나,<br>DB를 직접 운영·관리해야 함 | 비용이 발생하지만,<br> 자동 관리로 안정성이 높고 확장이 용이함 |
 <br><br><br><br>
 
 ---
