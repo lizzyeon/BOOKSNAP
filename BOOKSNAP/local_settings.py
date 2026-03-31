@@ -1,4 +1,4 @@
-from .local_settings import *
+from .settings import *
 
 DATABASES = {
     'default': {

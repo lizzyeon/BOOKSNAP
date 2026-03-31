@@ -6,7 +6,7 @@ from uuid import uuid4
 from .models import Feed, Like, Reply, Bookmark, Follow
 from user.models import User
 import os
-from BOOKSNAP.local_settings import MEDIA_ROOT
+from BOOKSNAP.settings import MEDIA_ROOT
 
 
 class Main(APIView):    # /main 페이지를 보여줘라

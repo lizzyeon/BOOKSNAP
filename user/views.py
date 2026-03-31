@@ -1,6 +1,6 @@
 import os
 from uuid import uuid4
-from BOOKSNAP.local_settings import MEDIA_ROOT
+from BOOKSNAP.settings import MEDIA_ROOT
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import login
 from django.shortcuts import render
