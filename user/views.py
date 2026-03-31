@@ -1,11 +1,12 @@
 import os
 from uuid import uuid4
-from BOOKSNAP.settings import MEDIA_ROOT
+from BOOKSNAP.local_settings import MEDIA_ROOT
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import login
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.conf import settings
 
 from content.models import Follow
 from .models import User
@@ -64,21 +65,27 @@ class UploadProfile(APIView):
     def post(self, request):
 
         # 데이터 꺼내기
-        file = request.FILES['file']
+        file = request.FILES.get('file')
+        if file is None:
+            return Response(status=400, data={"message": "파일 없음"})
+
         email= request.data.get('email')
+        user = User.objects.filter(email=email).first()
+
+        if user is None:
+            return Response(status=404, data={"message": "유저 없음"})
 
         uuid_name = uuid4().hex                             # 랜덤으로 이미지 이름 생성
-        save_path = os.path.join(MEDIA_ROOT, uuid_name)     # media에 저장
+        save_path = os.path.join(settings.MEDIA_ROOT, uuid_name)     # media에 저장
+
+        print(settings.MEDIA_ROOT)
 
         # ('media'에) 파일 저장
         with open(save_path, 'wb+') as destination:
             for chunk in file.chunks():
                 destination.write(chunk)
 
-        profile_image = uuid_name                           # 파일 이름을을 'profile_image' 필드에 저장
-
-        user = User.objects.filter(email=email).first()        # 해당 이메일 주소를 찾아서
-        user.profile_image = profile_image                  # 해당 사용자의 프로필 이미지에 '그' 파일을
-        user.save()                                         # DB에 저장
+        user.profile_image = uuid_name
+        user.save()
 
         return Response(status=200)

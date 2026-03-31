@@ -1,4 +1,4 @@
-from .settings import *
+from .local_settings import *
 
 DATABASES = {
     'default': {
@@ -6,3 +6,4 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+DEBUG = True

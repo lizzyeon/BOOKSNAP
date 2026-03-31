@@ -7,6 +7,7 @@
 - 이를 해결하기 위해 `local_settings.py`를 추가하고 `try-except` 구문을 활용하여 환경에 따라 DB 설정을 자동으로 전환하도록 구조 개선
 - 로컬 환경에서는 SQLite를 사용하여 빠르게 개발 및 테스트를 진행하고,
   배포 환경에서는 `local_settings.py`가 존재하지 않기 때문에 기본 설정(RDS)이 적용되도록 구성
+<br><br>
   - 로컬 환경(`local_settings.py`)
   ```
   DATABASES = {

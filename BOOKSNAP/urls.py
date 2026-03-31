@@ -19,7 +19,7 @@ from django.contrib import admin
 from django.urls import path, include
 from .views import Sub
 from content.views import Main, UploadFeed
-from .settings import MEDIA_URL, MEDIA_ROOT
+from .local_settings import MEDIA_URL, MEDIA_ROOT
 from django.conf.urls.static import static
 from django.conf import settings
 

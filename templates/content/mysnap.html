@@ -915,7 +915,7 @@
                 $.ajax({                                        // AJAX(비동기)로 브라우저 → Django 서버로 데이터 전달
                     data: fd,                                   // 1. FormData에 담긴 파일+글 데이터를
                     method: "POST",                             // 2. 서버로 전달하는데
-                    url: "/user/profile/upload",                // 3. 이 주소로 요청(user.urls.py에서 연결)
+                    url: "/user/profile/upload/",                // 3. 이 주소로 요청(user.urls.py에서 연결)
                     processData: false,
                     contentType: false,
 
