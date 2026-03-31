@@ -29,7 +29,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = [
     'booksnap.duckdns.org',
-    '3.26.24.175'
+    '3.26.24.175',
     '127.0.0.1'
 ]
 

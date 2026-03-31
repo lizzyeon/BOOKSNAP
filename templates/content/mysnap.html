@@ -615,10 +615,9 @@
             });
 
             /* * 아이콘 filled 처리 * */
-            $('.click-fill').click(function (event) {
-
-                let button = $(event.currentTarget);
-                button.toggleClass('filled');
+            $('.click-fill').click(function () {
+                $(`.click-fill`).removeClass('filled');
+                $(this).addClass('filled');
             });
 
             /* Grid Button */
@@ -644,7 +643,7 @@
                 let feed_id = $(this).data('feed-id');  // data-feed-id 값 가져오기
 
                 $.ajax({
-                    url: "/content/feed_detail",
+                    url: "/content/feed_detail/",
                     method: "GET",
                     data: {feed_id: feed_id},
 
