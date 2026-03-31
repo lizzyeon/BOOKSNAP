@@ -1,8 +1,22 @@
 from django.contrib import admin
 from .models import Feed, Like, Reply, Bookmark, Follow
 
-admin.site.register(Feed)
-admin.site.register(Like)
-admin.site.register(Reply)
-admin.site.register(Bookmark)
-admin.site.register(Follow)
+@admin.register(Feed)
+class FeedAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'feed')
+
+@admin.register(Like)
+class LikeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'feed')
+
+@admin.register(Reply)
+class ReplyAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'feed')
+
+@admin.register(Bookmark)
+class BookmarkAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'feed')
+
+@admin.register(Follow)
+class FollowAdmin(admin.ModelAdmin):
+    list_display = ('id', 'from_user', 'to_user')
