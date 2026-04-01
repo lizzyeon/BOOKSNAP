@@ -1,5 +1,64 @@
 # 📒 BOOKSNAP Development Log
 
+### 2026-04-01
+
+### 🛠️ Django Admin을 활용한 운영 효율 개선 및 데이터 관리 기능 구현
+<img src="static/d_images/2026-03-31-6.png" width="400" height="280">
+- 문제) 서비스 운영 과정에서 잘못된 이미지 경로로 인해 게시물이 정상적으로 렌더링되지 않는 문제가 발생
+  → 프론트엔드에서 직접 수정하기 어려운 데이터를 효율적으로 관리하기 위해 Django Admin을 활용
+    (관리자 페이지를 통해 데이터 조회, 수정, 삭제를 빠르게 수행할 수 있도록 구조 개선)
+<br><br>
+
+### 1. 🖥️ Admin 페이지 활성화 및 모델 등록
+<div style="display: flex; justify-content:left; gap: 10px">
+  <img src="static/d_images/2026-03-31-2.png" width="350" height="250">
+  <img src="static/d_images/2026-03-31-3.png" width="500" height="320">
+</div>
+
+- 서비스의 핵심 데이터 관리 효율을 높이기 위해 주요 모델을 Admin에 등록
+  - content/admin.py: Feed, Like, Reply, Bookmark, Follow 모델
+  - user/admin.py: Custom User 모델
+- 이를 통해 관리자 페이지에서 서비스 데이터를 직접 조회하고 제어할 수 있는 환경 구축
+<br><br>
+
+### 2. ✨ Admin 디테일 및 프리뷰 기능 구현
+<div style="display: flex; justify-content:left; flex-direction: column; gap: 10px">
+  <img src="static/d_images/2026-03-31-4.png" width="500" height="250">
+  <img src="static/d_images/2026-03-31-5.png" width="800" height="300">
+</div>
+
+- 단순 텍스트 기반 리스트의 한계를 개선하기 위해 `format_html`을 활용하여 이미지 프리뷰 기능 구현
+  - Feed 이미지 썸네일 표시 (`image_preview`)
+  - 프로필 이미지 표시 (`profile_preview`)
+- 사용자 관리 효율 향상을 위해 Admin UI 구조 개선
+  - `fieldsets`를 활용하여 정보 그룹화 (기본 정보 / 사용자 정보 / 권한)
+  - `readonly_fields`를 적용하여 비밀번호 필드 보호
+- Follow 데이터를 기반으로 사용자 관계를 직관적으로 파악할 수 있도록 개선
+  - 각 유저의 팔로워 / 팔로잉 수를 Admin 리스트에서 실시간 계산하여 표시
+<br><br>
+
+### 3. 🗑️ 데이터 정리 (Data Cleaning)
+<div style="display: flex; justify-content:left; gap: 10px">
+  <img src="static/d_images/2026-03-31-6.png" width="400" height="280"> ➡️ 
+  <img src="static/d_images/2026-03-31-8.png" width="400" height="280">
+</div><br>
+<img src="static/d_images/2026-03-31-7.png" width="600" height="380">
+
+- 이미지 경로 오류로 인해 프론트엔드에서 깨진 게시물이 발생하는 문제 확인
+- Admin의 bulk action 기능을 활용하여 문제 데이터를 효율적으로 제거
+- 체크박스와 `Delete selected feeds` 기능을 통해 다수의 데이터를 한 번에 삭제
+  - 잘못된 이미지 경로를 가진 Feed 2개 삭제
+- 결과적으로 사용자 프로필 페이지의 UI가 정상적으로 복구되고 데이터 정합성 확보
+ <br><br>
+
+📌 **배운 점**
+- 단순히 기능을 만드는 것뿐만 아니라, 운영 중 발생하는 데이터를 관리하는 방법과 중요성을 학습
+- Django Admin을 통해 코드 수정 없이도 데이터를 빠르게 확인하고 수정할 수 있어 운영 효율이 크게 올라간다는 것을 체감 
+  - 특히 설정에 따라 형태가 달라지는데, 더 편리하게 관리할 수 있도록 시각적으로 개선해 본 경험이 인상적이었음
+<br><br><br><br>
+
+---
+
 ## 2026-03-30
 
 ### 🛠️ 개발 환경 설정
