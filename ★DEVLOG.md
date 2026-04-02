@@ -1,6 +1,6 @@
 # 📒 BOOKSNAP Development Log
 
-### 2026-04-01
+### 2026-03-31
 
 ### 🛠️ Django Admin을 활용한 운영 효율 개선 및 데이터 관리 기능 구현
 <img src="static/d_images/2026-03-31-6.png" width="400" height="280">
