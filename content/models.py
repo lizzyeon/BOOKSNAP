@@ -16,12 +16,6 @@ class Like(models.Model):
     class Meta:
         unique_together = ('feed_id', 'email')      # 두 개가 같은 조합은 한 번만 있다(중복 X)
 
-# 댓글
-class Reply(models.Model):
-    feed_id = models.IntegerField()                 # 몇 번 피드에 대해서
-    email = models.EmailField(default='')           # 댓글 쓴 사람
-    reply_content = models.TextField()              # 댓글 내용
-
 # 북마크
 class Bookmark(models.Model):
     feed_id = models.IntegerField()                 # 몇 번 피드에 대해서
@@ -30,6 +24,12 @@ class Bookmark(models.Model):
 
     class Meta:
         unique_together = ('feed_id', 'email')
+
+# 댓글
+class Reply(models.Model):
+    feed_id = models.IntegerField()                 # 몇 번 피드에 대해서
+    email = models.EmailField(default='')           # 댓글 쓴 사람
+    reply_content = models.TextField()              # 댓글 내용
 
 # 팔로우
 class Follow(models.Model):

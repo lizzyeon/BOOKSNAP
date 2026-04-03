@@ -185,7 +185,6 @@
                         <div style="margin-left: 13px; padding-right: 10px; font-size: 18px">
                             <b>{{ feed.nickname }}</b>
                         </div>
-
                     </div>
 
                     <!-- 게시물(사진) -->
@@ -248,58 +247,40 @@
         <!-- 오른쪽 피드 -->
         <div style="width: 400px; height: 2000px; background: #f4f4f4; position: fixed; left: 62%">
 
-            <!-- 프로필 -->
-            <div style="display: flex; flex-direction: row; align-items: center; margin: 10px">
-
-                <!-- 프로필 사진 -->
-                <div class="box" style="height: 60px; width: 60px">
-                    <img class="profile" src="{% get_media_prefix %}{{ user.profile_image }}" style="height:60px; width: 60px">
-                </div>
-
-                <!-- 아이디 -->
-                <div style="margin-left: 10px; text-align: left; line-height: 1.3">
-                    <div style="font-weight: bold; font-size: 17px; line-height: 1.5">
-                        {{ user.nickname }}
-                    </div>
-                    <div style="color: gray; font-size: 13px; line-height: 1.5">
-                        {{ user.name }}
-                    </div>
-                </div>
-            </div>
-
             <!-- 회원님을 위한 추천 -->
             <div>
                 <!-- 글자 -->
                 <div style="display: flex; flex-direction: row; justify-content: space-between; margin: 20px">
-                    <div style="font-weight: bold">
-                        회원님을 위한 추천
-                    </div>
-                    <div>
-                        <a href="#" style="font-weight: bold; color: black; text-decoration: none"> 모두보기 </a>
-                    </div>
+                    <div style="font-weight: bold">회원님을 위한 추천</div>
+                    <div><a href="#" style="font-weight: bold; color: grey; text-decoration: none"> 모두보기 </a></div>
                 </div>
 
                 <!-- 추천 목록 -->
-                <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; margin: 10px">
+                {% for recommend in recommend_list %}
+                <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; flex-direction: row; margin: 10px; align-items: center;">
 
-                    <div style="display: flex; flex-direction: row;">
                         <!-- 프로필 사진 -->
-                        <div class="box" style="height: 40px; width: 40px">
-                            <img class="profile" src="{% static 'images/PEDRO.png' %}" style="height:40px; width: 40px">
-                        </div>
+                        <a href="/content/mysnap/{{ recommend.nickname }}">
+                            <div class="box" style="height: 60px; width: 60px; margin-left: 5px">
+                                <img class="profile" src="{% get_media_prefix %}{{ recommend.profile_image }}"
+                                     style="height:60px; width: 60px; cursor: pointer">
+                            </div>
+                        </a>
 
-                        <!-- 아이디 -->
-                        <div style="margin-left: 10px; text-align: left">
-                            <div style="font-weight: bold; font-size: 14px">PEDRO</div>
-                            <div style="color: gray; font-size: 12px">MUHAMAD ALI</div>
+                        <!-- 닉네임 | 이름 -->
+                        <div style="margin-left: 15px; text-align: left; line-height: 1.3">
+                            <div style="font-weight: bold; font-size: 17px; line-height: 1.5">{{ recommend.nickname }}</div>
+                            <div style="color: gray; font-size: 13px; line-height: 1.5">{{ recommend.name }}</div>
                         </div>
                     </div>
 
-                        <!-- 팔로우 -->
+                    <!-- 팔로우 -->
                     <div>
-                        <a href="#" style="font-size: 14px; font-weight: bold; color: blue; text-decoration: none; margin-right: 15px">팔로우</a>
+                        <a href="#" style="font-size: 14px; font-weight: bold; color: blue; text-decoration: none; margin-right: 20px">팔로우</a>
                     </div>
                 </div>
+                {% endfor %}
             </div>
 
             <!-- 그 외 안내 -->

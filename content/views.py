@@ -18,47 +18,64 @@ class Main(APIView):    # /main 페이지를 보여줘라
         user = request.user
         email = user.email
 
-        feed_object_list = Feed.objects.all().order_by('-id')      # feed 테이블의 모든(all) 데이터(objects)를 가져옴.
-        following_list = Follow.objects.filter(from_user=request.user, is_followed=True).values_list('to_user', flat=True)
+        # 1. 기본 데이터 미리 조회
+        feed_object_list = Feed.objects.all().order_by('-id')      # feed 테이블의 모든(all) 데이터(objects)를 가져옴
+        user_list = User.objects.all()
+        user_dict = {u.email: u for u in user_list}
 
-        # 피드 구성
+        # 2. 좋아요, 북마크 미리 조회
+        like_set = set(Like.objects.filter(email=email, is_like=True).values_list('feed_id', flat=True))
+        bookmark_set = set(Bookmark.objects.filter(email=email, is_marked=True).values_list('feed_id', flat=True))
+
+        # 3. 댓글 구성
+        reply_object_list = Reply.objects.all()
+        reply_list = {}
+
+        for reply in reply_object_list:
+            reply_user = user_dict.get(reply.email)
+            if not reply_user:
+                continue
+
+            reply_data = dict(nickname=reply_user.nickname,
+                              reply_content=reply.reply_content)
+            reply_list.setdefault(reply.feed_id, []).append(reply_data)  # feed_id 별로 댓글 리스트를 그룹화
+
+        # 4. 피드 구성
         feed_list = []       # feed, user, reply 등 데이터를 하나로 묶어 담을 리스트. 이것들이 합쳐서 하나의 피드를 만듦
 
         for feed in feed_object_list:
-            feed_user = User.objects.filter(email=feed.email).first()   # 게시물 작성자 정보 가져오기
-            if not feed_user:  # 혹시 작성자 정보가 없는 경우를 대비한 방어 코드
+            feed_user = user_dict.get(feed.email)   # 게시물 작성자 정보 가져오기
+            if not feed_user:                       # 혹시 작성자 정보가 없는 경우를 대비한 방어 코드
                 continue
-
-            reply_object_list = Reply.objects.filter(feed_id=feed.id)   # 이 게시물에 달린(feed_id가 같은) 댓글 가져오기
-            is_followed = feed_user.id in following_list
-
-            # 댓글 구성
-            reply_list = []
-
-            for reply in reply_object_list:
-                reply_user = User.objects.filter(email=reply.email).first()
-                if reply_user:
-                    reply_list.append(dict(nickname=reply_user.nickname, reply_content=reply.reply_content))
-
-            # 좋아요/북마크 처리
-            like_count = Like.objects.filter(feed_id=feed.id, is_like=True).count()             # 좋아요 총 개수
-            is_liked = Like.objects.filter(feed_id=feed.id, email=email, is_like=True).exists() # 사용자의 좋아요 누름 여부
-            is_marked = Bookmark.objects.filter(feed_id=feed.id, email=email, is_marked=True).exists()
 
             # feed_list(하나의 피드) 구성 요소
             feed_list.append(dict(id=feed.id,
                                   image=feed.image,
                                   content=feed.content,
-                                  like_count=like_count,
+                                  like_count=Like.objects.filter(feed_id=feed.id, is_like=True).count(),
                                   profile_image=feed_user.profile_image,
                                   nickname=feed_user.nickname,
-                                  reply_list=reply_list,
-                                  is_liked=is_liked,
-                                  is_marked=is_marked,
-                                  is_followed=is_followed))
+                                  reply_list=reply_list.get(feed.id, []),
+                                  is_liked=feed.id in like_set,
+                                  is_marked=feed.id in bookmark_set))
 
-        # 정상 로그인 상태면 Main 렌더링
-        return render(request, "BOOKSNAP/MAIN.html", {"feeds": feed_list, "user" : user})
+        # 5. 추천 회원 리스트(팔로잉 제외, 자신 제외, 랜덤 5명)
+        recommend_list = User.objects.exclude(
+            id__in=Follow.objects.filter(
+                from_user=user,
+                is_followed=True,
+            ).values_list('to_user', flat=True)
+        ).exclude(
+            email=user.email
+        ).exclude(
+            is_staff=True
+        ).order_by('?')[:5]
+
+        return render(request, "BOOKSNAP/MAIN.html", {
+            "feeds": feed_list,
+            "user": user,
+            "recommend_list": recommend_list,
+        })
 
 
 class UploadFeed(APIView):
@@ -87,83 +104,6 @@ class UploadFeed(APIView):
 
         # '성공했다'고 브라우저에 알려줌
         return Response(status=200)
-
-
-class MySnap(APIView):
-    def get(self, request, nickname):
-
-        if not request.user.is_authenticated:
-            return render(request, "user/login.html")
-
-        profile_user = User.objects.filter(nickname=nickname).first()   # 해당 프로필을 사용하고 있는 유저
-
-        if profile_user is None:
-            return Response(status=404)
-
-        email = profile_user.email
-
-        is_followed = Follow.objects.filter(from_user=request.user,      # 로그인한 유저가
-                                            to_user=profile_user,        # 해당 유저를
-                                            is_followed=True).exists()   # 현재 팔로우 상태(True)인 것만 filter
-
-        # 내 게시물 | 좋아요 게시물 | 북마크 게시물
-        feed_list = Feed.objects.filter(email=email).all().order_by('-id')
-        like_list = list(Like.objects.filter(email=email, is_like=True).values_list('feed_id', flat=True))
-        like_feed_list = Feed.objects.filter(id__in=like_list).order_by('-id')
-        bookmark_list = list(Bookmark.objects.filter(email=email, is_marked=True).values_list('feed_id', flat=True))
-        bookmark_feed_list = Feed.objects.filter(id__in=bookmark_list).order_by('-id')
-
-        # 팔로워 유저 | 팔로잉 유저
-        followers = Follow.objects.filter(to_user=profile_user, is_followed=True)    # 팔로워 : 프로필 유저에게 팔로우하는 유저들
-        followings = Follow.objects.filter(from_user=profile_user, is_followed=True) # 팔로잉 : 프로필 유저가 팔로우하는 유저들
-
-        # 게시물 수 | 팔로워 수 | 팔로잉 수
-        feed_count = Feed.objects.filter(email=email).count()
-        follower_count = followers.count()
-        following_count = followings.count()
-
-        # html로 데이터 전달
-        return render(request, 'content/mysnap.html', context=dict(feed_list=feed_list,
-                                                                                like_feed_list=like_feed_list,
-                                                                                bookmark_feed_list=bookmark_feed_list,
-                                                                                profile_user=profile_user,  # 프로필 주인
-                                                                                followers=followers,
-                                                                                followings=followings,
-                                                                                feed_count=feed_count,
-                                                                                follower_count=follower_count,
-                                                                                following_count=following_count,
-
-                                                                                is_followed=is_followed))
-
-def feed_detail(request):
-    feed_id = request.GET.get('feed_id', None)
-    if not feed_id:
-        return JsonResponse({'error':'No feed_id'}, status=400)
-
-    feed = Feed.objects.get(id=feed_id)
-    user = User.objects.filter(email=feed.email).first()
-    login_email = request.user.email
-
-    like_count = Like.objects.filter(feed_id=feed.id, is_like=True).count()  # 좋아요 총 개수
-    is_liked = Like.objects.filter(feed_id=feed.id, email=login_email, is_like=True).exists()  # 사용자의 좋아요 누름 여부
-    is_marked = Bookmark.objects.filter(feed_id=feed.id, email=login_email, is_marked=True).exists()
-
-    reply_object_list = Reply.objects.filter(feed_id=feed.id)
-    reply_list = []
-
-    for reply in reply_object_list:
-        reply_user = User.objects.filter(email=reply.email).first()
-        if reply_user:
-            reply_list.append(dict(nickname=reply_user.nickname, reply_content=reply.reply_content))
-
-
-    return JsonResponse({'image': '/media/' + feed.image,
-                         'nickname': user.nickname,
-                         'content': feed.content,
-                         'reply_list': reply_list,
-                         'is_liked': is_liked,
-                         'is_marked': is_marked,
-                         'like_count': like_count,})
 
 
 class UploadReply(APIView):
@@ -237,4 +177,84 @@ class ToggleFollow(APIView):
 
         # 결과
         return Response({"is_followed": follow.is_followed},status=200)
+
+
+class MySnap(APIView):
+    def get(self, request, nickname):
+
+        if not request.user.is_authenticated:
+            return render(request, "user/login.html")
+
+        profile_user = User.objects.filter(nickname=nickname).first()   # 해당 프로필을 사용하고 있는 유저
+
+        if profile_user is None:
+            return Response(status=404)
+
+        email = profile_user.email
+
+        is_followed = Follow.objects.filter(from_user=request.user,      # 로그인한 유저가
+                                            to_user=profile_user,        # 해당 유저를
+                                            is_followed=True).exists()   # 현재 팔로우 상태(True)인 것만 filter
+
+        # 내 게시물 | 좋아요 게시물 | 북마크 게시물
+        feed_list = Feed.objects.filter(email=email).all().order_by('-id')
+        like_list = list(Like.objects.filter(email=email, is_like=True).values_list('feed_id', flat=True))
+        like_feed_list = Feed.objects.filter(id__in=like_list).order_by('-id')
+        bookmark_list = list(Bookmark.objects.filter(email=email, is_marked=True).values_list('feed_id', flat=True))
+        bookmark_feed_list = Feed.objects.filter(id__in=bookmark_list).order_by('-id')
+
+        # 팔로워 유저 | 팔로잉 유저
+        followers = Follow.objects.filter(to_user=profile_user, is_followed=True)    # 팔로워 : 프로필 유저에게 팔로우하는 유저들
+        followings = Follow.objects.filter(from_user=profile_user, is_followed=True) # 팔로잉 : 프로필 유저가 팔로우하는 유저들
+
+        # 게시물 수 | 팔로워 수 | 팔로잉 수
+        feed_count = Feed.objects.filter(email=email).count()
+        follower_count = followers.count()
+        following_count = followings.count()
+
+        # html로 데이터 전달
+        return render(request, 'content/mysnap.html', context=dict(feed_list=feed_list,
+                                                                                like_feed_list=like_feed_list,
+                                                                                bookmark_feed_list=bookmark_feed_list,
+                                                                                profile_user=profile_user,  # 프로필 주인
+                                                                                followers=followers,
+                                                                                followings=followings,
+                                                                                feed_count=feed_count,
+                                                                                follower_count=follower_count,
+                                                                                following_count=following_count,
+
+                                                                                is_followed=is_followed))
+
+
+def feed_detail(request):
+    feed_id = request.GET.get('feed_id', None)
+    if not feed_id:
+        return JsonResponse({'error':'No feed_id'}, status=400)
+
+    feed = Feed.objects.get(id=feed_id)
+    user = User.objects.filter(email=feed.email).first()
+    login_email = request.user.email
+
+    like_count = Like.objects.filter(feed_id=feed.id, is_like=True).count()  # 좋아요 총 개수
+    is_liked = Like.objects.filter(feed_id=feed.id, email=login_email, is_like=True).exists()  # 사용자의 좋아요 누름 여부
+    is_marked = Bookmark.objects.filter(feed_id=feed.id, email=login_email, is_marked=True).exists()
+
+    reply_object_list = Reply.objects.filter(feed_id=feed.id)
+    reply_list = []
+
+    for reply in reply_object_list:
+        reply_user = User.objects.filter(email=reply.email).first()
+        if reply_user:
+            reply_list.append(dict(nickname=reply_user.nickname,
+                                   reply_content=reply.reply_content,
+                                   profile_image=reply_user.profile_image,))
+
+
+    return JsonResponse({'image': '/media/' + feed.image,
+                         'nickname': user.nickname,
+                         'content': feed.content,
+                         'reply_list': reply_list,
+                         'is_liked': is_liked,
+                         'is_marked': is_marked,
+                         'like_count': like_count,})
 

@@ -376,7 +376,7 @@
             <div id="like_feed_list" style="display: none; flex-direction: row; flex-wrap: wrap; width: 60%; justify-content: flex-start">
                 {% for feed in like_feed_list %}
                     <div style="width: calc(33.33% - 10px); margin: 5px">
-                            <img class="profile" src="{% get_media_prefix %}{{ feed.image }}"
+                            <img class="feed_post" src="{% get_media_prefix %}{{ feed.image }}" data-feed-id="{{ feed.id }}"
                                  style="width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block">
                     </div>
                 {% endfor %}
@@ -386,7 +386,7 @@
             <div id="bookmark_feed_list" style="display: none; flex-direction: row; flex-wrap: wrap; width: 60%; justify-content: flex-start">
                 {% for feed in bookmark_feed_list %}
                     <div style="width: calc(33.33% - 10px); margin: 5px">
-                            <img class="profile" src="{% get_media_prefix %}{{ feed.image }}"
+                            <img class="feed_post" src="{% get_media_prefix %}{{ feed.image }}" data-feed-id="{{ feed.id }}"
                                  style="width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block">
                     </div>
                 {% endfor %}
@@ -541,11 +541,8 @@
                         </div>
 
                         <!-- 댓글들 -->
-                        <div style="display:flex; flex-direction: row; margin-left: 10px">
-                            <div>img</div>
-                            <div id="modal_reply_list" style="flex-grow: 1; padding: 15px; font-size: 14px; overflow-y: auto;
-                                min-height: 175px; max-height: 250px; flex-shrink: 0;"></div>
-                        </div>
+                        <div id="modal_reply_list" style="flex-grow: 1; padding: 5px; font-size: 14px; overflow-y: auto;
+                            min-height: 175px; max-height: 250px; flex-shrink: 0; width: 100%"></div>
 
                         <!-- 댓글 게시 버튼 -->
                         <div style="display: flex; flex-direction: row; border-top: solid 1px #dbdbdb; align-items: center">
@@ -591,7 +588,7 @@
                 $.ajax({
                     data: { to_user_id: to_user_id },
                     method: "POST",
-                    url: "/content/follow",
+                    url: "/content/follow/",
 
                     success: function (data) {
                         if(data.is_followed) {
@@ -678,10 +675,15 @@
 
                         data.reply_list.forEach(function (reply) {
                             let reply_row = `
-                                <div style="margin-bottom: 8px; display: flex; flex-direction: column">
-                                    <b style="margin-right: 5px;">${reply.nickname}</b>
-                                    <span style="font-size: 13px">${reply.reply_content}</span>
-                                </div>`;
+                                <div style="display: flex; flex-direction: row">
+                                    <div style="width: 35px; height: 35px; border-radius: 50%; overflow: hidden; margin-right: 10px; margin-left: 5px; flex-shrink: 0;">
+                                        <img src="/media/${reply.profile_image}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    </div>
+                                    <div style="margin-bottom: 8px; display: flex; flex-direction: column">
+                                        <b style="margin-right: 5px;">${reply.nickname}</b>
+                                        <span style="font-size: 13px">${reply.reply_content}</span>
+                                    </div>
+                                </div>`
                             $('#modal_reply_list').append(reply_row);
                         });
 
@@ -741,7 +743,7 @@
                     success: function (data) {
                         $this.toggleClass('filled');
                     }
-                });content_follow
+                });
             });
 
             /* Modal - UploadReply */
